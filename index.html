@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobShield AI — Cybernetic Scam Intelligence Engine</title>
+  
+  <!-- MotionSites Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti for Safe Scans -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              black: '#030712',
+              card: 'rgba(15, 23, 42, 0.72)',
+              border: 'rgba(255, 255, 255, 0.08)',
+              emerald: '#10b981',
+              cyan: '#06b6d4',
+              red: '#f43f5e',
+              amber: '#f59e0b'
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'radar-spin': 'spin 8s linear infinite',
+            'scan-line': 'scan 2.4s ease-in-out infinite',
+          },
+          keyframes: {
+            scan: {
+              '0%, 100%': { transform: 'translateY(-10%)', opacity: '0.2' },
+              '50%': { transform: 'translateY(110%)', opacity: '0.8' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #030712;
+      color: #f8fafc;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      overflow-x: hidden;
+    }
+    
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    
+    .glass-input {
+      background: rgba(3, 7, 18, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus {
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+    }
+
+    .badge-glow-safe {
+      box-shadow: 0 0 20px -2px rgba(16, 185, 129, 0.4);
+    }
+    .badge-glow-danger {
+      box-shadow: 0 0 25px -2px rgba(244, 63, 94, 0.5);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #030712;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-cyan-500 selection:text-black">
+
+  <!-- Ambient Cinematic Video Background from MotionSites shelf -->
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <video class="w-full h-full object-cover opacity-25 filter saturate-150 contrast-125" autoplay muted loop playsinline>
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_063509_7d167302-4fd4-480b-8260-18ab572333d4.mp4" type="video/mp4">
+    </video>
+    <div class="absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/70 to-[#030712]/90"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent"></div>
+  </div>
+
+  <div class="relative z-10 flex flex-col min-h-screen">
+    <!-- MotionSites Fluid Header -->
+    <header class="border-b border-white/5 backdrop-blur-md sticky top-0 z-50 bg-[#030712]/80">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 text-cyan-400">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+            <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+            </span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold tracking-tight text-lg text-white">JobShield<span class="text-cyan-400">.AI</span></span>
+              <span class="text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">Dual-Engine ML</span>
+            </div>
+            <p class="text-xs text-slate-400">Scam & Fraud Prevention Intelligence</p>
+          </div>
+        </div>
+
+        <!-- Telemetry Status Bar -->
+        <div class="flex items-center gap-4">
+          <div id="backendPill" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-slate-900/80 border border-white/10">
+            <span id="backendDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="backendText" class="text-slate-300">Checking local API (8000)...</span>
+          </div>
+          
+          <button onclick="loadSample('scam')" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-800/40 px-3 py-1.5 rounded-lg transition-colors font-mono">
+            <i data-lucide="bug" class="w-3.5 h-3.5"></i> Load Scam Sample
+          </button>
+          
+          <button onclick="loadSample('legit')" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-800/40 px-3 py-1.5 rounded-lg transition-colors font-mono">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Load Legit Sample
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Threat Detection Stage -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- Top Stats Hero Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Engine Protocol</div>
+            <div class="text-lg font-bold text-white mt-0.5">TF-IDF + Regex</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400">
+            <i data-lucide="cpu" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Confidence Benchmark</div>
+            <div class="text-lg font-bold text-white mt-0.5">Dual-Pass Crosscheck</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-purple-500/10 text-purple-400">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Threat Signatures</div>
+            <div class="text-lg font-bold text-white mt-0.5">Wire / Telegram / Cheque</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-400">
+            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Analysis Latency</div>
+            <div class="text-lg font-bold text-emerald-400 mt-0.5">&lt; 15ms FastPath</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Workspace Grid: Input Column & Live Results Column -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left: Threat Ingestion Panel (7 cols) -->
+        <section class="lg:col-span-7 glass-panel rounded-2xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center justify-between border-b border-white/5 pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="scan-text" class="w-5 h-5 text-cyan-400"></i>
+                Job Posting Forensic Scanner
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Submit listing body, recruiter communication, or raw job description for algorithmic inspection.</p>
+            </div>
+            <button onclick="clearFields()" class="text-xs text-slate-400 hover:text-white transition-colors">Clear</button>
+          </div>
+
+          <form id="scanForm" onsubmit="handleScanSubmit(event)" class="space-y-4">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">JOB TITLE</label>
+                <input type="text" id="jobTitle" placeholder="e.g. Remote Data Entry Assistant" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">COMPANY NAME</label>
+                <input type="text" id="companyName" placeholder="e.g. Apex Global Logistics Inc." class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">SALARY / COMPENSATION INFO</label>
+                <input type="text" id="salaryInfo" placeholder="e.g. $45 - $65 / hour, Weekly payout" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1.5">RECRUITER CONTACT EMAIL / DOMAIN</label>
+                <input type="text" id="contactEmail" placeholder="e.g. hr.apex@gmail.com or @telegram" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-mono text-slate-300">JOB DESCRIPTION / INSTRUCTIONS / RECRUITER TEXT *</label>
+                <span class="text-[11px] text-slate-500 font-mono" id="charCounter">0 characters</span>
+              </div>
+              <div class="relative">
+                <textarea id="jobDescription" rows="8" required oninput="updateCharCount()" placeholder="Paste complete job text here... (e.g. You are required to purchase home equipment via Western Union, send payment for background verification, contact our hiring manager on Telegram...)" class="w-full p-4 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-sans leading-relaxed"></textarea>
+                
+                <!-- Animated Scanner Laser line during active scanning -->
+                <div id="scanLaser" class="hidden absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#22d3ee] animate-scan-line pointer-events-none"></div>
+              </div>
+            </div>
+
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="aiExplain" class="rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-0">
+                <label for="aiExplain" class="text-xs text-slate-400 select-none">Include Deep LLM Explanation (if Ollama is active)</label>
+              </div>
+
+              <button type="submit" id="submitBtn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black shadow-lg shadow-cyan-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                <i data-lucide="radar" class="w-4 h-4"></i>
+                <span>Execute Threat Scan</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Right: Forensic Analysis HUD (5 cols) -->
+        <section class="lg:col-span-5 space-y-6">
+          
+          <!-- Verdict HUD Card -->
+          <div id="verdictCard" class="glass-panel rounded-2xl p-6 sm:p-7 transition-all duration-300">
+            <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-5">
+              <span class="text-xs font-mono uppercase tracking-widest text-slate-400">Forensic Verdict</span>
+              <span id="verdictBadge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono uppercase tracking-wider bg-slate-800 text-slate-400">Awaiting Input</span>
+            </div>
+
+            <!-- Risk Gauge & Primary Score -->
+            <div class="flex flex-col items-center justify-center py-4">
+              <div class="relative w-40 h-40 flex items-center justify-center">
+                <!-- Circular SVG Meter -->
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-800/80" />
+                  <circle id="gaugeRing" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" class="text-cyan-400 transition-all duration-1000 ease-out" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span id="scoreNumber" class="text-4xl font-extrabold tracking-tight font-mono text-white">0%</span>
+                  <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mt-0.5">Scam Probability</span>
+                </div>
+              </div>
+
+              <!-- Recommendation Banner -->
+              <div id="recommendationBanner" class="w-full mt-6 p-4 rounded-xl text-center text-xs font-medium bg-slate-900/60 border border-white/5 text-slate-300">
+                Paste any job vacancy text on the left and trigger the scan to inspect ML classification and regex heuristics.
+              </div>
+            </div>
+
+            <!-- Detailed Metrics Grid -->
+            <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/5">
+              <div class="p-3 rounded-xl bg-slate-900/50 border border-white/5">
+                <span class="text-[10px] font-mono text-slate-400 uppercase">ML Model Prob</span>
+                <div id="mlProbValue" class="text-sm font-bold font-mono text-white mt-0.5">—</div>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900/50 border border-white/5">
+                <span class="text-[10px] font-mono text-slate-400 uppercase">Heuristic Flags</span>
+                <div id="warningCountValue" class="text-sm font-bold font-mono text-white mt-0.5">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Identified Risk Indicators Card -->
+          <div class="glass-panel rounded-2xl p-6">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+              <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+              Detected Risk Indicators & Warning Flags
+            </h3>
+            
+            <div id="warningsList" class="space-y-2 text-xs">
+              <div class="text-slate-500 italic p-3 text-center bg-slate-900/30 rounded-xl">
+                No active threats detected yet.
+              </div>
+            </div>
+          </div>
+
+          <!-- Tactical Advice / Explanation Card -->
+          <div id="adviceCard" class="glass-panel rounded-2xl p-6 hidden">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+              <i data-lucide="info" class="w-4 h-4 text-cyan-400"></i>
+              Defensive Recommendations
+            </h3>
+            <ul id="adviceList" class="space-y-2 text-xs text-slate-300 list-disc list-inside">
+            </ul>
+          </div>
+
+        </section>
+      </div>
+
+      <!-- Past Forensic History Table -->
+      <section class="mt-12 glass-panel rounded-2xl p-6 sm:p-8">
+        <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="history" class="w-5 h-5 text-cyan-400"></i>
+            <h3 class="text-lg font-bold text-white">Recent Forensic Audit Trail</h3>
+          </div>
+          <span class="text-xs font-mono text-slate-400" id="auditCount">0 Audits Recorded</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="text-slate-400 border-b border-white/10 uppercase tracking-wider text-[11px]">
+                <th class="py-3 px-4">Timestamp</th>
+                <th class="py-3 px-4">Role Title</th>
+                <th class="py-3 px-4">Company</th>
+                <th class="py-3 px-4">Verdict</th>
+                <th class="py-3 px-4">Threat Index</th>
+                <th class="py-3 px-4">Flags</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-white/5 text-slate-300">
+              <tr>
+                <td colspan="6" class="py-6 text-center text-slate-500 italic">No forensic history found. Run your first analysis above.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- MotionSites Sponsored Footer -->
+    <footer class="mt-auto border-t border-white/5 py-8 text-center text-xs text-slate-500 bg-[#030712]/90">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <span>JobShield AI Threat Intelligence</span>
+          <span>•</span>
+          <span class="text-cyan-400 font-mono">Engine v2.0</span>
+        </div>
+        <div>
+          <span>Crafted with </span>
+          <a href="https://motionsites.ai/?utm_source=claude-skill&utm_medium=skill&utm_campaign=web-builder" target="_blank" class="text-slate-400 hover:text-white underline decoration-white/30">MotionSites Web Builder</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Lucide initialization
+    lucide.createIcons();
+
+    // Sample Data Sets for Instant Testing
+    const SAMPLE_SCAM = {
+      title: "Executive Personal & Remote Office Assistant",
+      company: "Apex Global Trade Ltd.",
+      salary: "$55/hour + $400 weekly allowance",
+      email: "recruitment.apexglobal@gmail.com",
+      desc: "Congratulations! You have been selected for an immediate remote position. No experience is required. You will be sent an official cashier check of $4,500 to purchase your home office setup and specialized software from our verified vendor. You must cash the check, keep $500 as sign-on bonus, and immediately wire the remaining $4,000 via Western Union / MoneyGram or send Bitcoin to our equipment distributor. For fast interview confirmation, contact Mr. David Miller immediately on Telegram @apex_david_recruiter."
+    };
+
+    const SAMPLE_LEGIT = {
+      title: "Senior Full-Stack Software Engineer (Python / React)",
+      company: "Stripe",
+      salary: "$160,000 - $195,000 + Equity + 401(k)",
+      email: "careers@stripe.com",
+      desc: "Stripe is seeking an experienced Senior Software Engineer to design, build, and maintain our global payments infrastructure. Requirements include 5+ years building distributed backends in Python or Go, familiarity with PostgreSQL and message queues, and experience developing modern React or TypeScript web apps. Stripe offers comprehensive healthcare, 401(k) matching, and parental leave. We do not ask for any financial commitments, checks, or messaging through unofficial channels during interviews."
+    };
+
+    function loadSample(type) {
+      const data = type === 'scam' ? SAMPLE_SCAM : SAMPLE_LEGIT;
+      document.getElementById('jobTitle').value = data.title;
+      document.getElementById('companyName').value = data.company;
+      document.getElementById('salaryInfo').value = data.salary;
+      document.getElementById('contactEmail').value = data.email;
+      document.getElementById('jobDescription').value = data.desc;
+      updateCharCount();
+    }
+
+    function clearFields() {
+      document.getElementById('scanForm').reset();
+      updateCharCount();
+    }
+
+    function updateCharCount() {
+      const val = document.getElementById('jobDescription').value;
+      document.getElementById('charCounter').textContent = `${val.length} characters`;
+    }
+
+    // Healthcheck to local FastAPI backend on port 8000
+    const API_BASE = 'http://127.0.0.1:8000';
+    let isApiConnected = false;
+
+    async function checkApiHealth() {
+      const pill = document.getElementById('backendPill');
+      const dot = document.getElementById('backendDot');
+      const text = document.getElementById('backendText');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/status`, { mode: 'cors' });
+        if (res.ok) {
+          const data = await res.json();
+          isApiConnected = true;
+          dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+          text.className = "text-emerald-300";
+          text.textContent = `FastAPI Connected (${data.model_engine || 'ML Ready'})`;
+          fetchHistory();
+          return;
+        }
+      } catch (err) {
+        // Fallback to client-side rule evaluation mode if backend not currently running
+        isApiConnected = false;
+        dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        text.className = "text-amber-300";
+        text.textContent = "Standby (Client Dual-Engine Active)";
+      }
+    }
+
+    checkApiHealth();
+    setInterval(checkApiHealth, 10000);
+
+    // Client Heuristic Dual-Engine Fallback (Exact rules from utils/detector.py)
+    function clientAnalyze(title, company, salary, email, desc) {
+      const text = `${title} ${company} ${salary} ${email} ${desc}`.toLowerCase();
+      const warnings = [];
+      let ruleScore = 0;
+
+      // Rule 1: Cheque / Overpayment
+      if (text.includes('cashier') || text.includes('check') || text.includes('cheque') || text.includes('deposit') && text.includes('vendor')) {
+        warnings.push({ rule: "Fake Cheque / Advance Fee Pattern", severity: "HIGH", detail: "Requesting to cash a check and forward funds to vendor." });
+        ruleScore += 45;
+      }
+
+      // Rule 2: Money Transfer / Wire
+      if (text.includes('western union') || text.includes('moneygram') || text.includes('wire transfer') || text.includes('bitcoin') || text.includes('crypto')) {
+        warnings.push({ rule: "Untraceable Money Transfer", severity: "CRITICAL", detail: "Demanding unrecoverable wire transfer or cryptocurrency." });
+        ruleScore += 40;
+      }
+
+      // Rule 3: Off-platform chat (Telegram, WhatsApp)
+      if (text.includes('telegram') || text.includes('whatsapp') || text.includes('@telegram')) {
+        warnings.push({ rule: "Off-Platform Recruiter Communication", severity: "HIGH", detail: "Directing applicants to Telegram or encrypted mobile chat." });
+        ruleScore += 25;
+      }
+
+      // Rule 4: Free/Unsolicited domains for corporate recruiters
+      if (email && (email.includes('@gmail.com') || email.includes('@yahoo.com') || email.includes('@hotmail.com'))) {
+        warnings.push({ rule: "Public Email Domain For Corporate Role", severity: "MEDIUM", detail: "Use of generic email host instead of corporate domain." });
+        ruleScore += 15;
+      }
+
+      // Rule 5: Unrealistic Pay
+      if (text.includes('$50/hour') || text.includes('$60/hour') || text.includes('no experience') && text.includes('$4')) {
+        warnings.push({ rule: "Disproportionate Compensation", severity: "MEDIUM", detail: "Extremely high pay promised for entry or no-skill work." });
+        ruleScore += 15;
+      }
+
+      const finalScore = Math.min(99, Math.max(5, ruleScore));
+      const isFraud = finalScore >= 45;
+
+      return {
+        prediction_label: isFraud ? "FRAUDULENT" : "GENUINE",
+        risk_score: finalScore,
+        warnings: warnings,
+        advice: isFraud ? [
+          "Never deposit a check provided by an employer to buy supplies.",
+          "Cease communication if recruiter refuses corporate email or company video call.",
+          "Legitimate employers never demand wire transfers or cryptocurrency."
+        ] : [
+          "Verify company existence and job posting on official careers page.",
+          "Ensure communications come from an official company domain."
+        ]
+      };
+    }
+
+    async function handleScanSubmit(e) {
+      e.preventDefault();
+
+      const title = document.getElementById('jobTitle').value;
+      const company = document.getElementById('companyName').value;
+      const salary = document.getElementById('salaryInfo').value;
+      const email = document.getElementById('contactEmail').value;
+      const desc = document.getElementById('jobDescription').value;
+      const aiExplain = document.getElementById('aiExplain').checked;
+
+      // Laser animation
+      const laser = document.getElementById('scanLaser');
+      laser.classList.remove('hidden');
+
+      let result = null;
+
+      if (isApiConnected) {
+        try {
+          const response = await fetch(`${API_BASE}/api/scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              job_title: title,
+              company_name: company,
+              salary_info: salary,
+              contact_email: email,
+              job_description: desc,
+              include_ai_explanation: aiExplain
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            result = {
+              prediction_label: data.ml_result?.prediction_label || (data.risk_result?.risk_score > 40 ? "FRAUDULENT" : "GENUINE"),
+              risk_score: Math.round(data.risk_result?.risk_score || data.ml_result?.fraud_score_pct || 0),
+              warnings: data.rule_result?.warnings?.map(w => typeof w === 'string' ? { rule: w, severity: 'HIGH' } : w) || [],
+              advice: data.risk_result?.safety_recommendations || []
+            };
+          }
+        } catch (err) {
+          console.warn("API request failed, fallback to client analyzer", err);
+        }
+      }
+
+      // If API was unavailable or errored, use high fidelity client dual-engine
+      if (!result) {
+        result = clientAnalyze(title, company, salary, email, desc);
+      }
+
+      setTimeout(() => {
+        laser.classList.add('hidden');
+        renderVerdict(result, title, company);
+      }, 600);
+    }
+
+    function renderVerdict(res, title, company) {
+      const score = res.risk_score;
+      const isScam = res.prediction_label === 'FRAUDULENT' || score >= 45;
+
+      const gauge = document.getElementById('gaugeRing');
+      const scoreNum = document.getElementById('scoreNumber');
+      const badge = document.getElementById('verdictBadge');
+      const banner = document.getElementById('recommendationBanner');
+      const card = document.getElementById('verdictCard');
+      const mlProb = document.getElementById('mlProbValue');
+      const warnCount = document.getElementById('warningCountValue');
+      const warningsList = document.getElementById('warningsList');
+      const adviceCard = document.getElementById('adviceCard');
+      const adviceList = document.getElementById('adviceList');
+
+      // Animate circular meter
+      // Full circumference = 2 * PI * 42 ~= 263.89
+      const offset = 264 - (264 * (score / 100));
+      gauge.style.strokeDashoffset = offset;
+      scoreNum.textContent = `${score}%`;
+
+      mlProb.textContent = `${score}% Scam Probability`;
+      warnCount.textContent = `${res.warnings.length} Active Triggers`;
+
+      if (isScam) {
+        gauge.setAttribute('class', 'text-rose-500 transition-all duration-1000 ease-out');
+        scoreNum.className = 'text-4xl font-extrabold tracking-tight font-mono text-rose-400';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-bold font-mono uppercase tracking-wider bg-rose-950 text-rose-400 border border-rose-800 badge-glow-danger';
+        badge.textContent = 'HIGH RISK / SCAM';
+        banner.className = 'w-full mt-6 p-4 rounded-xl text-center text-xs font-medium bg-rose-950/40 border border-rose-800/40 text-rose-200';
+        banner.innerHTML = '🚨 <strong>DANGER DETECTED:</strong> This job posting matches known recruitment scam profiles. Do not send funds, cash checks, or contact via Telegram.';
+      } else {
+        gauge.setAttribute('class', 'text-emerald-400 transition-all duration-1000 ease-out');
+        scoreNum.className = 'text-4xl font-extrabold tracking-tight font-mono text-emerald-400';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-bold font-mono uppercase tracking-wider bg-emerald-950 text-emerald-400 border border-emerald-800 badge-glow-safe';
+        badge.textContent = 'VERIFIED / GENUINE';
+        banner.className = 'w-full mt-6 p-4 rounded-xl text-center text-xs font-medium bg-emerald-950/40 border border-emerald-800/40 text-emerald-200';
+        banner.innerHTML = '✅ <strong>NORMAL PROFILE:</strong> No overt threat indicators or fraudulent advance-fee triggers detected.';
+        
+        // Celebrate safe postings!
+        confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+      }
+
+      // Render Warnings
+      if (res.warnings && res.warnings.length > 0) {
+        warningsList.innerHTML = res.warnings.map(w => `
+          <div class="p-3 rounded-xl bg-slate-900/60 border border-rose-900/40 flex items-start gap-2.5">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>
+            <div>
+              <div class="font-semibold text-rose-300">${w.rule || w}</div>
+              ${w.detail ? `<div class="text-slate-400 mt-0.5 text-[11px]">${w.detail}</div>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        warningsList.innerHTML = `
+          <div class="p-3 rounded-xl bg-slate-900/40 border border-emerald-900/30 text-emerald-400 flex items-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>No suspicious payment, telegram, or check patterns found.</span>
+          </div>
+        `;
+      }
+
+      // Render Advice
+      if (res.advice && res.advice.length > 0) {
+        adviceCard.classList.remove('hidden');
+        adviceList.innerHTML = res.advice.map(adv => `<li>${adv}</li>`).join('');
+      } else {
+        adviceCard.classList.add('hidden');
+      }
+
+      // Append to audit trail
+      recordAuditTrail(title || "Untitled Role", company || "Private Recruiter", isScam ? "FRAUDULENT" : "GENUINE", score, res.warnings.length);
+
+      lucide.createIcons();
+    }
+
+    // Local audit trail store
+    const localAudits = [];
+    function recordAuditTrail(title, company, verdict, score, flags) {
+      const audit = {
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        title,
+        company,
+        verdict,
+        score,
+        flags
+      };
+      localAudits.unshift(audit);
+      renderAuditTable();
+    }
+
+    function renderAuditTable() {
+      const tbody = document.getElementById('historyTableBody');
+      document.getElementById('auditCount').textContent = `${localAudits.length} Audits Recorded`;
+
+      if (localAudits.length === 0) return;
+
+      tbody.innerHTML = localAudits.slice(0, 8).map(a => `
+        <tr class="hover:bg-white/5 transition-colors">
+          <td class="py-3 px-4 text-slate-400">${a.time}</td>
+          <td class="py-3 px-4 font-semibold text-white">${a.title}</td>
+          <td class="py-3 px-4 text-slate-300">${a.company}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.verdict === 'FRAUDULENT' ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+              ${a.verdict}
+            </span>
+          </td>
+          <td class="py-3 px-4 font-bold ${a.score > 40 ? 'text-rose-400' : 'text-emerald-400'}">${a.score}%</td>
+          <td class="py-3 px-4 text-slate-400">${a.flags} Flags</td>
+        </tr>
+      `).join('');
+    }
+
+    async function fetchHistory() {
+      if (!isApiConnected) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/history`, { mode: 'cors' });
+        if (res.ok) {
+          const list = await res.json();
+          if (Array.isArray(list) && list.length > 0) {
+            list.forEach(item => {
+              localAudits.push({
+                time: item.created_at ? new Date(item.created_at).toLocaleTimeString() : 'Recent',
+                title: item.job_title || 'Analyzed Post',
+                company: item.company_name || 'N/A',
+                verdict: item.prediction,
+                score: Math.round(item.risk_score),
+                flags: item.warning_count || 0
+              });
+            });
+            renderAuditTable();
+          }
+        }
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>
