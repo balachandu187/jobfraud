@@ -9,13 +9,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import json
 
-# Local modules
-from model.predictor import JobPredictor
-from utils.detector import ScamDetector
-from utils.risk_analyzer import RiskAnalyzer
-from utils.explanation import get_safety_recommendations
+# Local modules — the Streamlit UI calls the same service layer as the REST API so
+# the ML/rules/risk logic can never diverge between the two front ends.
+from services import DetectionService, InputError, ScanPayload
 from utils.ollama_client import OllamaClient
-from database.db_manager import DatabaseManager
 
 # Page Configuration
 st.set_page_config(
@@ -98,17 +95,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Initialize singletons in session state
-if "db" not in st.session_state:
-    st.session_state.db = DatabaseManager()
-
-if "predictor" not in st.session_state:
-    st.session_state.predictor = JobPredictor()
-
-if "detector" not in st.session_state:
-    st.session_state.detector = ScamDetector()
-
-if "analyzer" not in st.session_state:
-    st.session_state.analyzer = RiskAnalyzer()
+if "service" not in st.session_state:
+    st.session_state.service = DetectionService()
 
 if "ollama" not in st.session_state:
     st.session_state.ollama = OllamaClient()
@@ -133,7 +121,7 @@ with st.sidebar:
     st.markdown("#### System Status")
     
     # Model status
-    if st.session_state.predictor.is_ready:
+    if st.session_state.service.predictor.is_ready:
         st.success("● ML Classifier Ready", icon="✅")
     else:
         st.warning("● Model Not Trained", icon="⚠️")
@@ -154,7 +142,7 @@ if page == "Home Dashboard":
     st.title("🛡️ Recruitment Fraud Prevention Dashboard")
     st.write("Real-time telemetry and aggregated analytics of scanned job advertisements.")
     
-    stats = st.session_state.db.get_statistics()
+    stats = st.session_state.service.statistics()
     
     # Metric cards row
     c1, c2, c3, c4 = st.columns(4)
@@ -233,7 +221,7 @@ if page == "Home Dashboard":
     # Recent scans preview table
     st.markdown("---")
     st.subheader("🕒 Recent Scan Activity")
-    recent = st.session_state.db.get_recent_scans(limit=5)
+    recent = st.session_state.service.history(limit=5)
     if recent:
         df_recent = pd.DataFrame(recent)[["timestamp", "job_title", "company_name", "risk_level", "risk_score", "prediction"]]
         df_recent.columns = ["Timestamp", "Job Title", "Company", "Risk Tier", "Risk Score (0-100)", "ML Prediction"]
@@ -312,54 +300,23 @@ elif page == "Scan a Job":
             st.error("Please paste the job advertisement text before analyzing.")
         else:
             with st.spinner("Executing ML Inference & Scam Heuristic Rules..."):
-                # 1. Combine structured inputs for NLP
-                aggregated_text = (
-                    f"{job_title} {company_name} {salary_info} {contact_email} "
-                    f"{instructions} {skills} {job_description}"
-                )
+                # One shared pipeline: ML -> heuristics -> risk blend -> advice -> SQLite.
+                try:
+                    result = st.session_state.service.scan(ScanPayload(
+                        job_description=job_description,
+                        job_title=job_title or "",
+                        company_name=company_name or "",
+                        salary_info=salary_info or "",
+                        contact_email=contact_email or "",
+                        instructions=instructions or "",
+                        skills=skills or "",
+                    )).to_dict()
+                except InputError as error:
+                    st.error(str(error))
+                    result = None
 
-                # 2. Machine Learning Prediction
-                ml_result = st.session_state.predictor.predict(aggregated_text)
-
-                # 3. Rule-Based Heuristic Scan
-                rule_result = st.session_state.detector.analyze(
-                    text=f"{salary_info} {contact_email} {instructions} {job_description}",
-                    company=company_name
-                )
-
-                # 4. Ensemble Risk Blending
-                risk_result = st.session_state.analyzer.calculate_risk(ml_result, rule_result)
-
-                # 5. Safety Recommendations
-                safety_tips = get_safety_recommendations(
-                    risk_result["risk_level"],
-                    risk_result["warnings"]
-                )
-
-                # 6. Save to Database
-                scan_id = st.session_state.db.save_scan(
-                    job_text=job_description,
-                    prediction=risk_result["verdict"],
-                    risk_score=risk_result["risk_score"],
-                    risk_level=risk_result["risk_level"],
-                    job_title=job_title or "Unspecified Title",
-                    company_name=company_name or "Unspecified Employer",
-                    warnings=risk_result["warnings"]
-                )
-
-                # 7. Store current scan in session state
-                st.session_state.current_scan = {
-                    "scan_id": scan_id,
-                    "job_title": job_title,
-                    "company_name": company_name,
-                    "salary_info": salary_info,
-                    "job_description": job_description,
-                    "ml_result": ml_result,
-                    "rule_result": rule_result,
-                    "risk_result": risk_result,
-                    "safety_tips": safety_tips
-                }
-
+            if result:
+                st.session_state.current_scan = result
                 st.success("✅ Job advertisement analyzed successfully!")
                 st.info("Navigate to **'Scan Results'** tab in the sidebar or view summary below.")
                 st.rerun()
@@ -512,7 +469,7 @@ elif page == "Scan History":
     st.title("📜 Scanned Advertisements Archive")
     st.write("Review, inspect, or manage all historical job credibility audits stored in SQLite.")
 
-    scans = st.session_state.db.get_recent_scans(limit=100)
+    scans = st.session_state.service.history(limit=100)
 
     if not scans:
         st.info("No scan history logged yet. Analyze job advertisements to populate this archive.")
@@ -522,7 +479,7 @@ elif page == "Scan History":
             st.caption(f"Showing **{len(scans)}** most recent analyses.")
         with h2:
             if st.button("🗑️ Clear All Scan Logs", use_container_width=True, type="secondary"):
-                st.session_state.db.clear_all_history()
+                st.session_state.service.clear_history()
                 st.success("All scan history has been cleared.")
                 st.rerun()
 
@@ -542,7 +499,7 @@ elif page == "Scan History":
                         st.markdown(f"- ⚠️ **{w.get('title')}**: {w.get('explanation')}")
 
                 if st.button(f"Delete Record #{item['id']}", key=f"del_{item['id']}"):
-                    st.session_state.db.delete_scan(item['id'])
+                    st.session_state.service.delete_scan(item['id'])
                     st.success(f"Record #{item['id']} deleted.")
                     st.rerun()
 

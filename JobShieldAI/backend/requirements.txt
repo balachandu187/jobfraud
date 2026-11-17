@@ -1,0 +1,39 @@
+# JobShield AI v3 backend — standalone requirements
+#
+#   pip install -r backend/requirements.txt
+#   python -m backend.ml.train_model
+#   uvicorn backend.main:app --reload
+#
+# The repository-root requirements.txt is a superset (it also includes the legacy
+# Streamlit UI and test tooling); this file contains only what the v3 API needs.
+
+# ---- Web framework ----
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+pydantic>=2.8,<3
+python-multipart>=0.0.9,<1
+
+# ---- Database ----
+sqlalchemy>=2.0,<3
+
+# ---- Machine learning ----
+scikit-learn>=1.5,<2
+joblib>=1.4,<2
+pandas>=2.2,<3
+numpy>=1.26,<3
+
+# ---- HTTP (Ollama + URL ingestion) ----
+requests>=2.32,<3
+beautifulsoup4>=4.12,<5
+
+# ---- Optional: screenshot OCR ----
+# Also requires the Tesseract binary:
+#   Windows  https://github.com/UB-Mannheim/tesseract/wiki
+#   macOS    brew install tesseract
+#   Debian   sudo apt install tesseract-ocr
+pillow>=10.3,<13
+pytesseract>=0.3.10,<1
+
+# ---- Tests ----
+pytest>=8,<9
+httpx>=0.27,<1

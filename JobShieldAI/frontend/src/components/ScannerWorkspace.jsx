@@ -19,7 +19,10 @@ import {
   DollarSign,
   BookmarkCheck,
   Zap,
-  Info
+  Info,
+  Link2,
+  ImageUp,
+  Loader2
 } from 'lucide-react';
 import RiskGauge from './RiskGauge';
 
@@ -48,6 +51,9 @@ export default function ScannerWorkspace({
   const [aiLoading, setAiLoading] = useState(false);
   const [dynamicAiText, setDynamicAiText] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [extracting, setExtracting] = useState(false);
 
   // Demo Presets
   const presets = [
@@ -120,6 +126,18 @@ export default function ScannerWorkspace({
     setErrorMessage('');
   };
 
+  // Extracts a readable error message from a failed API response.
+  const describeFailure = async (response, fallback) => {
+    try {
+      const body = await response.json();
+      if (typeof body.detail === 'string') return body.detail;
+      if (Array.isArray(body.detail) && body.detail[0]?.msg) return body.detail[0].msg;
+    } catch {
+      /* response was not JSON */
+    }
+    return fallback;
+  };
+
   const handleRunScan = async (e) => {
     if (e) e.preventDefault();
     if (!jobDescription.trim()) {
@@ -152,7 +170,8 @@ export default function ScannerWorkspace({
       });
 
       if (!response.ok) {
-        throw new Error(`API responded with status ${response.status}`);
+        setErrorMessage(await describeFailure(response, `Scan failed (HTTP ${response.status}).`));
+        return;
       }
 
       const data = await response.json();
@@ -164,6 +183,85 @@ export default function ScannerWorkspace({
     } finally {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      setIsScanning(false);
+      setScanStep(0);
+    }
+  };
+
+  // Fetches the posting from a URL, then scans the extracted text server-side.
+  const handleUrlScan = async (e) => {
+    if (e) e.preventDefault();
+    if (!sourceUrl.trim()) {
+      setErrorMessage('Enter the URL of the job advertisement.');
+      return;
+    }
+    setErrorMessage('');
+    setIsScanning(true);
+    setScanStep(1);
+    const timer = setTimeout(() => setScanStep(2), 500);
+    try {
+      const response = await fetch('/api/scan/url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: sourceUrl.trim(),
+          job_title: jobTitle,
+          company_name: companyName,
+          ollama_model: selectedModel,
+          include_ai_explanation: useOllama
+        })
+      });
+      if (!response.ok) {
+        setErrorMessage(await describeFailure(response, `Could not analyse that URL (HTTP ${response.status}).`));
+        return;
+      }
+      const data = await response.json();
+      setJobDescription(data.job_description || '');
+      setDynamicAiText(data.ai_explanation?.text || null);
+      onScanComplete(data);
+    } catch (err) {
+      console.error('URL scan error:', err);
+      setErrorMessage('Failed to reach the backend scan engine.');
+    } finally {
+      clearTimeout(timer);
+      setIsScanning(false);
+      setScanStep(0);
+    }
+  };
+
+  // OCRs an uploaded screenshot on the server, then scans the extracted text.
+  const handleImageScan = async (e) => {
+    if (e) e.preventDefault();
+    if (!imageFile) {
+      setErrorMessage('Choose a screenshot of the job advertisement first.');
+      return;
+    }
+    setErrorMessage('');
+    setIsScanning(true);
+    setScanStep(1);
+    const timer = setTimeout(() => setScanStep(2), 600);
+    try {
+      const form = new FormData();
+      form.append('file', imageFile);
+      form.append('job_title', jobTitle);
+      form.append('company_name', companyName);
+      form.append('ollama_model', selectedModel);
+      form.append('include_ai_explanation', String(useOllama));
+
+      const response = await fetch('/api/scan/image', { method: 'POST', body: form });
+      if (!response.ok) {
+        setErrorMessage(await describeFailure(response, `Could not read that screenshot (HTTP ${response.status}).`));
+        return;
+      }
+      const data = await response.json();
+      setJobDescription(data.job_description || '');
+      setDynamicAiText(data.ai_explanation?.text || null);
+      onScanComplete(data);
+    } catch (err) {
+      console.error('Image scan error:', err);
+      setErrorMessage('Failed to upload the screenshot to the backend.');
+    } finally {
+      clearTimeout(timer);
       setIsScanning(false);
       setScanStep(0);
     }
@@ -277,30 +375,30 @@ ${dynamicAiText || currentScan.ai_explanation?.text || 'Automated rule verificat
         <div className="lg:col-span-5 glass-panel p-6 rounded-2xl border border-white/[0.08] space-y-5">
           {/* Input Mode Tabs */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setActiveInputTab('raw')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  activeInputTab === 'raw'
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                Raw Text Paste
-              </button>
-              <button
-                onClick={() => setActiveInputTab('structured')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  activeInputTab === 'structured'
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                Structured Fields
-              </button>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { id: 'raw', label: 'Raw Text' },
+                { id: 'structured', label: 'Structured Fields' },
+                { id: 'url', label: 'From URL' },
+                { id: 'image', label: 'Screenshot' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => { setActiveInputTab(tab.id); setErrorMessage(''); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    activeInputTab === tab.id
+                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 font-bold'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
             <button
+              type="button"
               onClick={handleClearInputs}
               className="text-xs text-slate-500 hover:text-slate-300 font-mono transition-colors cursor-pointer"
             >
@@ -308,8 +406,123 @@ ${dynamicAiText || currentScan.ai_explanation?.text || 'Automated rule verificat
             </button>
           </div>
 
+          {/* URL ingestion form */}
+          {activeInputTab === 'url' && (
+            <form onSubmit={handleUrlScan} className="space-y-3 animate-fadeIn">
+              <div>
+                <label className="block text-xs font-mono text-slate-400 mb-1">
+                  Job Advertisement URL
+                </label>
+                <input
+                  type="url"
+                  value={sourceUrl}
+                  onChange={(e) => setSourceUrl(e.target.value)}
+                  placeholder="https://company.com/careers/apply/12345"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-white/[0.08] text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+                <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                  The server fetches the page, strips navigation and scripts, then runs the
+                  dual-engine scan. Private and loopback addresses are refused.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono text-slate-400 mb-1">Job Title (optional)</label>
+                  <input
+                    type="text"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    placeholder="e.g. Backend Engineer"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-white/[0.08] text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-slate-400 mb-1">Company (optional)</label>
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="e.g. ABC Technologies"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-white/[0.08] text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
+                  <AlertOctagon className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isScanning}
+                className={`w-full py-3 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 transition-all shadow-lg ${
+                  isScanning
+                    ? 'bg-blue-700/60 cursor-not-allowed border border-blue-500/30'
+                    : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/20 border border-blue-400/40 cursor-pointer'
+                }`}
+              >
+                {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4 text-blue-200" />}
+                <span>{isScanning ? 'Fetching and scanning page...' : 'Fetch URL & Scan'}</span>
+              </button>
+            </form>
+          )}
+
+          {/* Screenshot / OCR form */}
+          {activeInputTab === 'image' && (
+            <form onSubmit={handleImageScan} className="space-y-3 animate-fadeIn">
+              <label className="block text-xs font-mono text-slate-400 mb-1">
+                Screenshot of the Advertisement
+              </label>
+              <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border border-dashed border-white/[0.12] bg-slate-900/50 hover:border-blue-500/40 transition-colors cursor-pointer">
+                <ImageUp className="w-6 h-6 text-slate-500" />
+                <span className="text-xs text-slate-400">
+                  {imageFile ? imageFile.name : 'Click to choose a PNG or JPG (max 8 MB)'}
+                </span>
+                {imageFile && (
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    {(imageFile.size / 1024).toFixed(0)} KB
+                  </span>
+                )}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                />
+              </label>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Text is extracted with Tesseract OCR on the server, then scored. Requires the
+                Tesseract binary to be installed on the host.
+              </p>
+
+              {errorMessage && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
+                  <AlertOctagon className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isScanning || !imageFile}
+                className={`w-full py-3 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2.5 transition-all shadow-lg ${
+                  isScanning || !imageFile
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/[0.06]'
+                    : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/20 border border-blue-400/40 cursor-pointer'
+                }`}
+              >
+                {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageUp className="w-4 h-4 text-blue-200" />}
+                <span>{isScanning ? 'Running OCR and scan...' : 'Extract Text & Scan'}</span>
+              </button>
+            </form>
+          )}
+
           {/* Form */}
-          <form onSubmit={handleRunScan} className="space-y-4">
+          <form onSubmit={handleRunScan} className={`space-y-4 ${activeInputTab === 'url' || activeInputTab === 'image' ? 'hidden' : ''}`}>
             {activeInputTab === 'structured' && (
               <div className="space-y-3.5 animate-fadeIn">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -428,9 +641,13 @@ ${dynamicAiText || currentScan.ai_explanation?.text || 'Automated rule verificat
                     onChange={(e) => setSelectedModel(e.target.value)}
                     className="px-2 py-1 rounded bg-slate-800 border border-white/[0.08] text-xs text-slate-300 focus:outline-none font-mono"
                   >
-                    {systemStatus?.ollama_models?.map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    )) || <option value="llama3.2:latest">llama3.2:latest</option>}
+                    {(() => {
+                      // Prefer models actually pulled locally; fall back to suggestions.
+                      const models = systemStatus?.ollama_models?.length
+                        ? systemStatus.ollama_models
+                        : (systemStatus?.suggested_ollama_models || ['llama3.2:latest']);
+                      return models.map((m) => <option key={m} value={m}>{m}</option>);
+                    })()}
                   </select>
                 </div>
               )}
