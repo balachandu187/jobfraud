@@ -36,6 +36,137 @@ Then open **http://localhost:8000** (UI) and **http://localhost:8000/docs** (int
 
 ---
 
+---
+
+## 0a. v3 modular backend (SQLAlchemy + routers)
+
+The project now ships a second, fully modular backend under `backend/`, built to a
+standard layered architecture. It serves the **same React UI** and the **same endpoint
+paths**, so the frontend needed no changes.
+
+```
+backend/
+├── main.py                  FastAPI app, CORS, lifespan, SPA serving
+├── config.py                all settings via env vars (validated at import)
+├── requirements.txt
+├── api/
+│   ├── routes/              scan.py · history.py · dashboard.py · health.py
+│   └── schemas/             scan_schema.py · history_schema.py (Pydantic)
+├── core/security.py         SSRF guards, TLS trust store
+├── database/                connection.py · models.py (SQLAlchemy) · crud.py
+├── services/                ml_service · rule_engine · risk_analyzer ·
+│                            explanation_service · extraction_service · scan_service
+├── ml/                      train_model.py · predictor.py
+└── tests/                   test_scan.py · test_history.py
+```
+
+Run it:
+
+```bash
+pip install -r backend/requirements.txt
+python -m backend.ml.train_model          # once
+uvicorn backend.main:app --reload         # http://127.0.0.1:8000/docs
+```
+
+### Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/scan` | Analyse an advertisement; persists and returns the verdict |
+| `POST` | `/api/scan/url` | Fetch a public URL, extract text, analyse |
+| `POST` | `/api/scan/image` | OCR a screenshot, analyse |
+| `POST` | `/api/scan/explain` | Optional Ollama narrative (never alters the verdict) |
+| `GET` | `/api/history` | List scans (`limit`, `offset`, `risk_level`, `search`) |
+| `GET` | `/api/history/stats` | Counts per risk tier |
+| `GET` | `/api/history/{id}` | Full detail of one scan |
+| `DELETE` | `/api/history/{id}` | Delete one scan |
+| `DELETE` | `/api/history` | Purge all scans |
+| `GET` | `/api/dashboard` | Totals, distribution, top flags, 7-day trend, recent scans |
+| `GET` | `/api/health` | Dependency readiness (model, database, Ollama) |
+| `GET` | `/api/model` | Model metadata and held-out metrics |
+| `GET` | `/api/rules` | Heuristic catalogue |
+| `GET` | `/api/stats`, `/api/status` | Legacy aliases kept for the existing UI |
+
+### Response shape
+
+```json
+{
+  "success": true,
+  "scan_id": 6,
+  "prediction": "Possibly Fraudulent",
+  "risk_score": 75,
+  "risk_level": "High Risk",
+  "ml_prediction": "Fraudulent",
+  "ml_probability": 0.6381,
+  "rule_based_flags": [
+    {
+      "id": "REGISTRATION_FEE",
+      "flag": "Registration fee requested",
+      "severity": "CRITICAL",
+      "explanation": "Legitimate employers do not ask candidates to pay ...",
+      "evidence": "registration fee"
+    }
+  ],
+  "recommendations": ["Do not pay any registration, processing or file fee ..."],
+  "explanation": "Scored 75/100, classified High Risk. ...",
+  "score_breakdown": {
+    "ml_score": 63.8, "rule_score": 72, "ml_weight": 0.5, "rule_weight": 0.5,
+    "blended_score": 67.9, "enforced_floor": 75, "final_score": 75,
+    "formula": "score = (63.8 x 0.5) + (72 x 0.5) = 67.9; raised to floor 75"
+  }
+}
+```
+
+`risk_level` uses the verbose strings **"Low Risk" / "Medium Risk" / "High Risk"**
+because the existing React components compare against exactly those values. The same
+payload also carries the nested `risk_result` / `ml_result` objects that the current
+scanner already renders, so both contract styles are satisfied.
+
+### Database
+
+`JobScan` (table `job_scans`) — created automatically on startup:
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | int PK | |
+| `job_title`, `company_name` | str | optional |
+| `job_description` | text | required |
+| `salary`, `contact_email` | str | optional |
+| `prediction` | str | e.g. "Possibly Fraudulent" |
+| `ml_prediction`, `ml_probability` | str, float | raw classifier output |
+| `risk_score`, `risk_level`, `rule_score` | int, str, int | final verdict |
+| `detected_flags`, `recommendations`, `score_breakdown` | JSON | full detail |
+| `source_type`, `source_url` | str | provenance |
+| `created_at` | datetime | indexed |
+
+The v3 backend writes to `database/jobshield_v3.db`. Rows from the previous
+`jobshield.db` are imported **once** on first startup (read-only, with a `.migrated`
+marker), so the audit history in the UI survives the upgrade.
+
+### Configuration
+
+Everything is env-overridable — see `backend/config.py`. Notable settings:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `JOBSHIELD_ML_WEIGHT` / `JOBSHIELD_RULE_WEIGHT` | `0.5` / `0.5` | Ensemble blend (must sum to 1) |
+| `JOBSHIELD_CRITICAL_FLOOR` | `75` | Minimum score when a CRITICAL flag fires |
+| `JOBSHIELD_ELEVATED_FLOOR` | `45` | Minimum score for HIGH / 2×MEDIUM |
+| `JOBSHIELD_CORS_ORIGINS` | the Vite dev origins | **Explicit** allow-list, never `*` |
+| `JOBSHIELD_DB_FILE` | `jobshield_v3.db` | SQLite filename |
+
+### Tests
+
+```bash
+python -m pytest -q        # 134 passed (75 v3 backend + 59 v2 system tests)
+```
+
+The v3 suite covers every rule, both safety floors, the risk formula, model-unavailable
+handling, the UI field contract, pagination/filter/search, deletion, health reporting and
+storage-failure resilience.
+
+---
+
 ## 1. System architecture
 
 The application implements a **dual-engine hybrid detection pipeline**, owned by a single
