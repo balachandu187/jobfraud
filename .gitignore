@@ -1,0 +1,19 @@
+# Python virtual environments & caches
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+
+# Node & Frontend
+**/node_modules/
+**/frontend/node_modules/
+**/frontend/dist/
+
+# SQLite databases & temp files
+**/*.db
+**/*.db-journal
+
+# System & OS
+.DS_Store
+Thumbs.db
