@@ -524,3 +524,45 @@ def test_url_fetch_network_failure_is_a_400_not_a_500(client):
 def test_url_fetcher_raises_domain_error_not_raw_exception():
     with pytest.raises(UrlFetchError):
         fetch_url_text("https://nonexistent-host-xyz-abc.invalid")
+
+
+# ---------------------------------------------------------------------------
+# Storage resilience — the verdict must survive a broken audit log
+# ---------------------------------------------------------------------------
+def _corrupt_db(tmp_path):
+    path = os.path.join(tmp_path, "corrupt.db")
+    with open(path, "wb") as handle:
+        handle.write(b"not a sqlite database" * 500)
+    return path
+
+
+def test_database_self_heals_when_file_is_corrupt(tmp_path):
+    """A corrupt audit log must not prevent startup; the file is quarantined."""
+    path = _corrupt_db(tmp_path)
+    manager = DatabaseManager(db_path=path)
+    assert manager.quarantined_path is not None, "original file should be preserved"
+    assert os.path.exists(manager.quarantined_path)
+    assert manager.health()["ok"] is True
+    assert manager.get_statistics()["total_scans"] == 0
+    assert manager.save_scan("t", "p", 10, "Low Risk") == 1
+
+
+def test_scan_still_returns_a_verdict_when_storage_fails(monkeypatch):
+    """Regression: a DB write error used to turn a completed scan into an HTTP 500."""
+    from services import DetectionService
+
+    service = DetectionService(model_dir=MODEL_DIR, db_path=os.path.join(tempfile.mkdtemp(), "x.db"))
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("database disk image is malformed")
+
+    monkeypatch.setattr(service.db, "save_scan", boom)
+    result = service.scan(ScanPayload(job_description=SCAM_TEXT, company_name="X"))
+    assert result.risk_result["risk_level"] == "High Risk"
+    assert result.scan_id is None
+    assert "storage_warning" in result.risk_result
+
+
+def test_api_status_reports_storage_health(client):
+    payload = client.get("/api/status").json()
+    assert payload["storage"]["ok"] is True

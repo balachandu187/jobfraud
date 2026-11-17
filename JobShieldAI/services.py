@@ -19,6 +19,7 @@ Pipeline:
 from __future__ import annotations
 
 import io
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
@@ -31,6 +32,8 @@ from utils.explanation import get_safety_recommendations
 from utils.ollama_client import OllamaClient
 from utils.risk_analyzer import RiskAnalyzer
 from utils.url_fetcher import UrlFetchError, fetch_url_text
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -124,12 +127,16 @@ class DetectionService:
             # but `ollama_available` is what the UI keys its badge off.
             "suggested_ollama_models": ["llama3.2:latest", "gemma2:2b", "mistral"],
             "active_ollama_model": self.ollama.model_name,
+            "storage": self.db.health(),
             "rules_loaded": len(self.detector.rules),
             "rule_ids": [rule["id"] for rule in self.detector.rules],
         }
 
     def statistics(self) -> Dict[str, Any]:
         return self.db.get_statistics()
+
+    def storage_health(self) -> Dict[str, Any]:
+        return self.db.health()
 
     def history(self, limit: int = 100) -> List[Dict[str, Any]]:
         return self.db.get_recent_scans(limit=limit)
@@ -223,18 +230,23 @@ class DetectionService:
         safety_tips = get_safety_recommendations(risk_result["risk_level"], risk_result["warnings"])
 
         scan_id: Optional[int] = None
+        storage_warning: Optional[str] = None
         if payload.persist:
-            scan_id = self.db.save_scan(
-                job_text=description,
-                prediction=risk_result["verdict"],
-                risk_score=risk_result["risk_score"],
-                risk_level=risk_result["risk_level"],
-                job_title=_clean(payload.job_title) or "Unspecified Title",
-                company_name=_clean(payload.company_name) or "Unspecified Employer",
-                warnings=risk_result["warnings"],
-                source_url=payload.source_url or "",
-                source_type=payload.source_type,
-            )
+            try:
+                scan_id = self.db.save_scan(
+                    job_text=description,
+                    prediction=risk_result["verdict"],
+                    risk_score=risk_result["risk_score"],
+                    risk_level=risk_result["risk_level"],
+                    job_title=_clean(payload.job_title) or "Unspecified Title",
+                    company_name=_clean(payload.company_name) or "Unspecified Employer",
+                    warnings=risk_result["warnings"],
+                    source_url=payload.source_url or "",
+                    source_type=payload.source_type,
+                )
+            except Exception as exc:  # storage must never block a verdict
+                logger.exception("Failed to persist scan record")
+                storage_warning = f"Audit record could not be saved: {exc}"
 
         ai_explanation = None
         if payload.include_ai_explanation:
@@ -247,6 +259,9 @@ class DetectionService:
                 risk_level=risk_result["risk_level"],
                 warnings=risk_result["warnings"],
             )
+
+        if storage_warning:
+            risk_result["storage_warning"] = storage_warning
 
         return ScanResult(
             scan_id=scan_id,

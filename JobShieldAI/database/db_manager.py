@@ -10,10 +10,13 @@ an older build is migrated in place instead of crashing on a missing column.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), "jobshield.db")
 
@@ -43,6 +46,8 @@ _V2_EXTRA_COLUMNS = (
 class DatabaseManager:
     def __init__(self, db_path: str = DEFAULT_DB_PATH):
         self.db_path = db_path
+        #: Set when the original file was unusable and a fresh one was created.
+        self.quarantined_path: Optional[str] = None
         self._init_db()
 
     # ------------------------------------------------------------------
@@ -52,9 +57,51 @@ class DatabaseManager:
         """Returns a connection configured with row dictionary access."""
         conn = sqlite3.connect(self.db_path, timeout=10)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA foreign_keys=ON")
+        # Journal mode is a per-database setting, not a per-connection one; setting it
+        # on every open is a write and fails on a read-only or damaged file.
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+        except sqlite3.DatabaseError:
+            pass
         return conn
+
+    def health(self) -> Dict[str, Any]:
+        """Cheap readiness probe used by /api/status."""
+        try:
+            with self._get_connection() as conn:
+                integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
+                count = conn.execute("SELECT COUNT(*) FROM scans").fetchone()[0]
+            return {"ok": integrity == "ok", "integrity": integrity, "rows": count,
+                    "path": self.db_path}
+        except sqlite3.DatabaseError as exc:
+            return {"ok": False, "error": str(exc), "path": self.db_path}
+
+    def _quarantine_and_reset(self, reason: str) -> None:
+        """
+        Moves an unusable database file aside and starts a fresh one.
+
+        The audit log is valuable but never important enough to prevent the application
+        from starting, so a corrupt/locked file is preserved under a timestamped name
+        for manual recovery instead of raising during import.
+        """
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup = f"{self.db_path}.corrupt-{stamp}"
+        try:
+            os.replace(self.db_path, backup)
+            self.quarantined_path = backup
+        except OSError:
+            backup = None
+        # WAL sidecars must go too, otherwise SQLite replays the bad journal.
+        for suffix in ("-wal", "-shm"):
+            try:
+                os.remove(f"{self.db_path}{suffix}")
+            except OSError:
+                pass
+        logger.error(
+            "Database at %s was unusable (%s). Started a fresh audit log%s.",
+            self.db_path, reason,
+            f"; original preserved at {backup}" if backup else "",
+        )
 
     def _init_db(self) -> None:
         """Creates the table if absent, then applies any pending migrations."""
@@ -62,6 +109,13 @@ class DatabaseManager:
         if directory:
             os.makedirs(directory, exist_ok=True)
 
+        try:
+            self._create_schema()
+        except sqlite3.DatabaseError as exc:
+            self._quarantine_and_reset(str(exc))
+            self._create_schema()
+
+    def _create_schema(self) -> None:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -159,28 +213,49 @@ class DatabaseManager:
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         params.append(limit)
 
-        with self._get_connection() as conn:
-            rows = conn.execute(
-                f"""
-                SELECT id, timestamp, job_title, company_name, job_text,
-                       prediction, risk_score, risk_level, warning_count, warnings_json,
-                       source_url, source_type
-                FROM scans
-                {where}
-                ORDER BY id DESC
-                LIMIT ?
-                """,
-                params,
-            ).fetchall()
-        return [self._row_to_record(row) for row in rows]
+        try:
+            with self._get_connection() as conn:
+                rows = conn.execute(
+                    f"""
+                    SELECT id, timestamp, job_title, company_name, job_text,
+                           prediction, risk_score, risk_level, warning_count, warnings_json,
+                           source_url, source_type
+                    FROM scans
+                    {where}
+                    ORDER BY id DESC
+                    LIMIT ?
+                    """,
+                    params,
+                ).fetchall()
+            return [self._row_to_record(row) for row in rows]
+        except sqlite3.DatabaseError:
+            # History is a convenience surface; never break the UI over it.
+            return []
 
     def get_scan(self, scan_id: int) -> Optional[Dict[str, Any]]:
-        with self._get_connection() as conn:
-            row = conn.execute("SELECT * FROM scans WHERE id = ?", (scan_id,)).fetchone()
-        return self._row_to_record(row) if row else None
+        try:
+            with self._get_connection() as conn:
+                row = conn.execute("SELECT * FROM scans WHERE id = ?", (scan_id,)).fetchone()
+            return self._row_to_record(row) if row else None
+        except sqlite3.DatabaseError:
+            return None
 
     def get_statistics(self) -> Dict[str, Any]:
-        """Calculates aggregated metrics for the dashboard."""
+        """Calculates aggregated metrics for the dashboard.
+
+        Degrades to zeroed metrics (plus ``storage_error``) rather than raising, so a
+        damaged or locked database cannot take down the dashboard.
+        """
+        try:
+            return self._compute_statistics()
+        except sqlite3.DatabaseError as exc:
+            return {
+                "total_scans": 0, "low_risk_count": 0, "medium_risk_count": 0,
+                "high_risk_count": 0, "average_risk_score": 0.0,
+                "top_warnings": [], "trend_7d": [], "storage_error": str(exc),
+            }
+
+    def _compute_statistics(self) -> Dict[str, Any]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             total = cursor.execute("SELECT COUNT(*) FROM scans").fetchone()[0]

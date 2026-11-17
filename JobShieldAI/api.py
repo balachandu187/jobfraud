@@ -29,7 +29,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import Body, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
@@ -357,6 +357,36 @@ if os.path.isdir(frontend_dist):
                 and os.path.isfile(candidate):
             return FileResponse(candidate)
         return FileResponse(os.path.join(frontend_dist, "index.html"))
+
+
+else:  # pragma: no cover - only when no production build exists
+    @app.get("/", include_in_schema=False)
+    async def build_missing_placeholder():
+        """Explains how to build the UI instead of returning a bare 404."""
+        return HTMLResponse(
+            """
+            <!doctype html><html><head><meta charset="utf-8">
+            <title>JobShield AI — UI not built</title>
+            <style>
+              body{background:#0B0F19;color:#F8FAFC;font-family:system-ui,sans-serif;
+                   display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+              .card{max-width:560px;padding:40px;border:1px solid #1E293B;border-radius:16px;
+                    background:#111827}
+              h1{font-size:20px;margin:0 0 12px} code{background:#1E293B;padding:2px 6px;
+                    border-radius:4px;color:#93C5FD}
+              p{color:#94A3B8;line-height:1.6;font-size:14px}
+              a{color:#60A5FA}
+            </style></head><body><div class="card">
+              <h1>🛡️ JobShield AI API is running</h1>
+              <p>The React interface has not been built yet. Build it once, then reload this page:</p>
+              <p><code>cd frontend &amp;&amp; npm install &amp;&amp; npm run build</code></p>
+              <p>Or just run <code>./run.sh</code>, which builds it automatically.</p>
+              <p>The API is live now: <a href="/docs">/docs</a> ·
+                 <a href="/api/status">/api/status</a> ·
+                 <a href="/api/health">/api/health</a></p>
+            </div></body></html>
+            """
+        )
 
 
 if __name__ == "__main__":
