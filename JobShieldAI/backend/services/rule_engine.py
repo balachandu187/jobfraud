@@ -275,6 +275,29 @@ class RuleEngine:
                     r"\s*(?:pan|bank|passbook)?)"
                 ),
             ),
+            Rule(
+                id="MONEY_MULE",
+                flag="Money mule or parcel reshipping scheme",
+                severity="CRITICAL",
+                weight=34,
+                category="Money Laundering",
+                explanation=(
+                    "Receiving third-party funds into your personal account and forwarding them, "
+                    "or re-shipping parcels from your home, is money laundering / reshipping "
+                    "fraud. The victim — not just the scammer — carries criminal liability."
+                ),
+                pattern=_compile(
+                    r"(?:(?:receive|accept)\s*(?:company\s*|client\s*)?(?:payments?|funds?|packages?|parcels?)"
+                    r"\s*(?:in|into|at)\s*(?:your\s*)?(?:personal\s*)?(?:bank|account|home|address)"
+                    r"|forward\s*(?:the\s*)?funds|western\s*union|moneygram"
+                    r"|wire\s*(?:the\s*)?(?:balance|funds|money)"
+                    r"|cash\s*(?:a\s*)?check\s*and\s*send"
+                    r"|\d+\s*%\s*commission\s*on\s*every\s*transaction"
+                    r"|deposit\s*the\s*check\s*into\s*your"
+                    r"|re-?\s*ship(?:ping)?\s*(?:packages?|parcels?)|reship"
+                    r"|repackag(?:e|ing)\s*(?:them|boxes?))"
+                ),
+            ),
             # ---------------- Absence signals (deliberately weak) -----
             Rule(
                 id="MISSING_COMPANY",

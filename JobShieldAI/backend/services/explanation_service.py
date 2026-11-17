@@ -50,6 +50,11 @@ ADVISORIES: Dict[str, str] = {
         "'Refundable' security deposits are a standard advance-fee trap and are rarely "
         "returned. Refuse and report the posting."
     ),
+    "MONEY_MULE": (
+        "LEGAL RISK: never receive third-party money in your personal account and forward it, "
+        "and never re-ship parcels from your home. This is money laundering / reshipping fraud "
+        "and the person whose account is used is prosecuted, not just the recruiter."
+    ),
     "IDENTITY_DOCUMENTS_REQUEST": (
         "Do not send Aadhaar, PAN or passport scans before a signed written offer. Share "
         "them only through an official onboarding portal."

@@ -377,3 +377,26 @@ def test_rules_endpoint_lists_every_rule(client):
     body = client.get("/api/rules").json()
     assert body["count"] == len(get_rule_engine().rules)
     assert {"id", "flag", "severity", "weight"} <= set(body["rules"][0])
+
+
+def test_money_mule_scheme_is_critical():
+    """Regression: the rebuilt engine dropped this rule, scoring a laundering ad Medium."""
+    text = (
+        "Seeking trustworthy individuals to receive company vendor payments into their "
+        "personal bank account and forward funds via Western Union. Earn 10% commission "
+        "on every transaction processed."
+    )
+    result = get_rule_engine().analyze(text, company="International Investment Alliance")
+    ids = {flag["id"]: flag for flag in result["flags"]}
+    assert "MONEY_MULE" in ids
+    assert ids["MONEY_MULE"]["severity"] == "CRITICAL"
+    assert ids["MONEY_MULE"]["evidence"]
+
+
+def test_reshiping_scheme_is_detected():
+    text = (
+        "Work from home receiving packages at your residential address, repackaging them "
+        "and re-shipping parcels overseas with prepaid labels."
+    )
+    ids = [flag["id"] for flag in get_rule_engine().analyze(text, company="X")["flags"]]
+    assert "MONEY_MULE" in ids
