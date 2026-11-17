@@ -130,8 +130,10 @@ export default function Sidebar({
         </div>
 
         <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-slate-500 font-mono">
-          <span>HOST: LOCALHOST</span>
-          <span className="text-emerald-500 font-medium">PORT 8000</span>
+          <span>SAME-ORIGIN API</span>
+          <span className={systemStatus ? 'text-emerald-500 font-medium' : 'text-slate-500'}>
+            {systemStatus ? 'CONNECTED' : 'OFFLINE'}
+          </span>
         </div>
       </div>
     </aside>
