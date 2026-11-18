@@ -44,7 +44,60 @@ class DatabaseManager:
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_scans_timestamp ON scans(timestamp)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_scans_risk_level ON scans(risk_level)")
+
+            # User Authentication and Access Management
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    salt TEXT NOT NULL,
+                    full_name TEXT NOT NULL,
+                    role TEXT DEFAULT 'analyst',
+                    created_at TEXT NOT NULL
+                )
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
             conn.commit()
+
+    def create_user(self, email: str, password_hash: str, salt: str, full_name: str, role: str = "analyst") -> Optional[int]:
+        """Creates a new user record. Returns user id or None if duplicate."""
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO users (email, password_hash, salt, full_name, role, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (email.lower().strip(), password_hash, salt, full_name.strip(), role, now))
+                conn.commit()
+                return cursor.lastrowid
+        except sqlite3.IntegrityError:
+            return None
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a user by email address."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, email, password_hash, salt, full_name, role, created_at
+                FROM users
+                WHERE email = ?
+            """, (email.lower().strip(),))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Retrieves user profile by id."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, email, full_name, role, created_at
+                FROM users
+                WHERE id = ?
+            """, (user_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
 
     def save_scan(
         self,

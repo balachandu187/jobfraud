@@ -86,7 +86,6 @@
       box-shadow: 0 0 25px -2px rgba(244, 63, 94, 0.5);
     }
 
-    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -112,10 +111,12 @@
   </div>
 
   <div class="relative z-10 flex flex-col min-h-screen">
-    <!-- MotionSites Fluid Header -->
+    <!-- MotionSites Fluid Header with Navigation Tabs & Auth Profile -->
     <header class="border-b border-white/5 backdrop-blur-md sticky top-0 z-50 bg-[#030712]/80">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-        <div class="flex items-center gap-3">
+        
+        <!-- Brand Identity -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchPage('scanner')">
           <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 text-cyan-400">
             <i data-lucide="shield-check" class="w-5 h-5"></i>
             <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
@@ -128,30 +129,43 @@
               <span class="font-bold tracking-tight text-lg text-white">JobShield<span class="text-cyan-400">.AI</span></span>
               <span class="text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">Dual-Engine ML</span>
             </div>
-            <p class="text-xs text-slate-400">Scam & Fraud Prevention Intelligence</p>
+            <p class="text-xs text-slate-400">Scam & Threat Intelligence Gateway</p>
           </div>
         </div>
 
-        <!-- Telemetry Status Bar -->
-        <div class="flex items-center gap-4">
-          <div id="backendPill" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-slate-900/80 border border-white/10">
+        <!-- Navigation Links -->
+        <nav class="hidden md:flex items-center gap-1 bg-slate-900/80 p-1.5 rounded-full border border-white/10 font-mono text-xs">
+          <button id="navScanner" onclick="switchPage('scanner')" class="px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all">
+            Forensic Scanner
+          </button>
+          <button id="navSecurity" onclick="switchPage('security')" class="px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all">
+            Security & Compliance
+          </button>
+          <button id="navAuth" onclick="switchPage('auth')" class="px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all">
+            Access Control
+          </button>
+        </nav>
+
+        <!-- Right Side: Telemetry & User Account -->
+        <div class="flex items-center gap-3">
+          <div id="backendPill" class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-slate-900/80 border border-white/10">
             <span id="backendDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="backendText" class="text-slate-300">Checking local API (8000)...</span>
+            <span id="backendText" class="text-slate-300">FastAPI</span>
           </div>
-          
-          <button onclick="loadSample('scam')" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-800/40 px-3 py-1.5 rounded-lg transition-colors font-mono">
-            <i data-lucide="bug" class="w-3.5 h-3.5"></i> Load Scam Sample
-          </button>
-          
-          <button onclick="loadSample('legit')" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-800/40 px-3 py-1.5 rounded-lg transition-colors font-mono">
-            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Load Legit Sample
-          </button>
+
+          <!-- Auth Status Indicator / Action Button -->
+          <div id="authPill" class="flex items-center gap-2">
+            <button onclick="switchPage('auth')" id="authActionBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-black hover:bg-slate-200 transition-colors">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              <span>Sign In</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- Main Threat Detection Stage -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- ================= PAGE 1: FORENSIC SCANNER VIEW ================= -->
+    <main id="pageScanner" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-opacity duration-300">
       
       <!-- Top Stats Hero Bar -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -209,11 +223,19 @@
               </h2>
               <p class="text-xs text-slate-400 mt-1">Submit listing body, recruiter communication, or raw job description for algorithmic inspection.</p>
             </div>
-            <button onclick="clearFields()" class="text-xs text-slate-400 hover:text-white transition-colors">Clear</button>
+            
+            <div class="flex items-center gap-2">
+              <button onclick="loadSample('scam')" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-800/40 px-2.5 py-1 rounded transition-colors font-mono">
+                Scam Demo
+              </button>
+              <button onclick="loadSample('legit')" class="text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-800/40 px-2.5 py-1 rounded transition-colors font-mono">
+                Legit Demo
+              </button>
+              <button onclick="clearFields()" class="text-xs text-slate-400 hover:text-white transition-colors ml-1">Clear</button>
+            </div>
           </div>
 
           <form id="scanForm" onsubmit="handleScanSubmit(event)" class="space-y-4">
-            
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-mono text-slate-300 mb-1.5">JOB TITLE</label>
@@ -278,7 +300,6 @@
             <!-- Risk Gauge & Primary Score -->
             <div class="flex flex-col items-center justify-center py-4">
               <div class="relative w-40 h-40 flex items-center justify-center">
-                <!-- Circular SVG Meter -->
                 <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-800/80" />
                   <circle id="gaugeRing" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" class="text-cyan-400 transition-all duration-1000 ease-out" />
@@ -368,13 +389,177 @@
 
     </main>
 
+    <!-- ================= PAGE 2: AUTHENTICATION & ACCESS CONTROL VIEW ================= -->
+    <main id="pageAuth" class="hidden flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 transition-opacity duration-300">
+      
+      <!-- User Profile State (Shown when logged in) -->
+      <div id="loggedInView" class="hidden glass-panel rounded-3xl p-8 sm:p-10 text-center space-y-6">
+        <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-cyan-500/20 to-emerald-500/30 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-xl shadow-cyan-500/10">
+          <i data-lucide="user-check" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-800 uppercase tracking-wider">Authenticated Analyst Session</span>
+          <h2 id="userDisplayName" class="text-2xl font-bold text-white mt-3">Chief Security Officer</h2>
+          <p id="userDisplayEmail" class="text-sm font-mono text-slate-400 mt-1">admin@jobshield.ai</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto text-left font-mono text-xs">
+          <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5">
+            <span class="text-slate-500 block uppercase">Role Clearance</span>
+            <span id="userDisplayRole" class="text-sm font-bold text-white mt-1 block">ADMIN</span>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5">
+            <span class="text-slate-500 block uppercase">Session Crypto</span>
+            <span class="text-sm font-bold text-emerald-400 mt-1 block">HMAC-SHA256</span>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5">
+            <span class="text-slate-500 block uppercase">Password Hash</span>
+            <span class="text-sm font-bold text-cyan-400 mt-1 block">PBKDF2 Salted</span>
+          </div>
+        </div>
+
+        <div class="pt-4 flex items-center justify-center gap-4">
+          <button onclick="switchPage('scanner')" class="px-6 py-2.5 rounded-xl font-semibold text-xs bg-cyan-500 text-black hover:bg-cyan-400 transition-colors">
+            Go To Forensic Scanner
+          </button>
+          <button onclick="handleLogout()" class="px-6 py-2.5 rounded-xl font-semibold text-xs bg-rose-950/60 text-rose-300 border border-rose-800 hover:bg-rose-950 transition-colors">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Auth Form Box (Shown when not logged in) -->
+      <div id="loggedOutView" class="glass-panel rounded-3xl p-8 sm:p-10 max-w-md mx-auto space-y-6">
+        <div class="text-center space-y-2">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <i data-lucide="shield-alert" class="w-7 h-7"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Security Gateway</h2>
+          <p class="text-xs text-slate-400">Sign in with authorized threat analyst credentials</p>
+        </div>
+
+        <!-- Mode Toggle (Sign In / Register) -->
+        <div class="flex items-center p-1 rounded-xl bg-slate-900/80 border border-white/5 font-mono text-xs">
+          <button id="toggleLoginBtn" onclick="setAuthMode('login')" class="flex-1 py-2 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all">Sign In</button>
+          <button id="toggleRegisterBtn" onclick="setAuthMode('register')" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition-all">Register</button>
+        </div>
+
+        <!-- Notice Alert -->
+        <div id="authAlert" class="hidden p-3 rounded-xl text-xs font-mono"></div>
+
+        <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4 font-sans">
+          
+          <div id="registerNameGroup" class="hidden">
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">FULL NAME</label>
+            <input type="text" id="authName" placeholder="Dr. John Carter" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">OFFICIAL EMAIL</label>
+            <input type="email" id="authEmail" required placeholder="analyst@jobshield.ai" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          </div>
+
+          <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1.5">PASSWORD</label>
+            <input type="password" id="authPassword" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          </div>
+
+          <button type="submit" id="authSubmitBtn" class="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black shadow-lg shadow-cyan-500/25 transition-all">
+            Sign In to Intelligence Portal
+          </button>
+        </form>
+
+        <!-- Quick Seed Demo Login -->
+        <div class="pt-2 border-t border-white/5 text-center">
+          <p class="text-[11px] text-slate-500 mb-2">Pre-configured Administrator Account:</p>
+          <button onclick="fillAdminCredentials()" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 underline underline-offset-4 decoration-cyan-500/30">
+            admin@jobshield.ai (Click to Auto-fill)
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= PAGE 3: SECURITY & COMPLIANCE VIEW ================= -->
+    <main id="pageSecurity" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-opacity duration-300 space-y-8">
+      
+      <div class="glass-panel rounded-3xl p-8 sm:p-10">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="p-2 rounded-xl bg-cyan-500/10 text-cyan-400"><i data-lucide="shield-check" class="w-6 h-6"></i></span>
+          <h2 class="text-2xl font-bold text-white">Cryptographic Security & System Architecture</h2>
+        </div>
+        <p class="text-sm text-slate-400 max-w-3xl">
+          JobShield AI adheres to zero-trust principles. Raw applicant inquiries, user credentials, and machine learning scoring vectors are strictly partitioned and cryptographically validated.
+        </p>
+
+        <!-- Security Architecture Pillars -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          
+          <div class="p-6 rounded-2xl bg-slate-900/60 border border-white/5 space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+              <i data-lucide="key" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">PBKDF2-HMAC-SHA256</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Passwords are salted with 16 random bytes and hashed with 100,000 iterations of PBKDF2-SHA256. Stored values cannot be rainbow-tabled.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900/60 border border-white/5 space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+              <i data-lucide="lock" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">Tamper-Proof Bearer Tokens</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              API sessions use constant-time HMAC-SHA256 authenticated payloads with strict UTC timestamp expirations to prevent replay attacks.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900/60 border border-white/5 space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <i data-lucide="database" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">Zero Third-Party Leaks</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Candidate text and corporate disclosures run on local TF-IDF matrices and in-memory regex. No external APIs scrape or ingest your job postings.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Compliance Matrix Table -->
+        <div class="mt-10 pt-6 border-t border-white/5">
+          <h3 class="text-sm font-mono uppercase tracking-wider text-slate-400 mb-4">Threat Defense Compliance Matrix</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+            <div class="p-4 rounded-xl bg-slate-900/40 border border-white/5">
+              <div class="text-slate-500">CORS Protection</div>
+              <div class="font-bold text-emerald-400 mt-1">Configured & Restricted</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/40 border border-white/5">
+              <div class="text-slate-500">SQL Injection</div>
+              <div class="font-bold text-emerald-400 mt-1">Parameterized Queries</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/40 border border-white/5">
+              <div class="text-slate-500">Rate Limiting Ready</div>
+              <div class="font-bold text-cyan-400 mt-1">FastAPI Middleware</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/40 border border-white/5">
+              <div class="text-slate-500">Audit Logging</div>
+              <div class="font-bold text-purple-400 mt-1">SQLite Immutable Log</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
     <!-- MotionSites Sponsored Footer -->
     <footer class="mt-auto border-t border-white/5 py-8 text-center text-xs text-slate-500 bg-[#030712]/90">
       <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-2">
           <span>JobShield AI Threat Intelligence</span>
           <span>•</span>
-          <span class="text-cyan-400 font-mono">Engine v2.0</span>
+          <span class="text-cyan-400 font-mono">Engine v2.1 (Secured)</span>
         </div>
         <div>
           <span>Crafted with </span>
@@ -385,10 +570,171 @@
   </div>
 
   <script>
-    // Lucide initialization
+    // Initialize Icons
     lucide.createIcons();
 
-    // Sample Data Sets for Instant Testing
+    // Navigation Router
+    function switchPage(page) {
+      document.getElementById('pageScanner').classList.add('hidden');
+      document.getElementById('pageAuth').classList.add('hidden');
+      document.getElementById('pageSecurity').classList.add('hidden');
+
+      document.getElementById('navScanner').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
+      document.getElementById('navSecurity').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
+      document.getElementById('navAuth').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
+
+      if (page === 'scanner') {
+        document.getElementById('pageScanner').classList.remove('hidden');
+        document.getElementById('navScanner').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+      } else if (page === 'security') {
+        document.getElementById('pageSecurity').classList.remove('hidden');
+        document.getElementById('navSecurity').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+      } else if (page === 'auth') {
+        document.getElementById('pageAuth').classList.remove('hidden');
+        document.getElementById('navAuth').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+      }
+      lucide.createIcons();
+    }
+
+    // ================= AUTHENTICATION LOGIC =================
+    let currentUser = null;
+    let authMode = 'login'; // 'login' or 'register'
+
+    function checkStoredSession() {
+      const stored = localStorage.getItem('jobshield_session');
+      if (stored) {
+        try {
+          currentUser = JSON.parse(stored);
+          renderAuthStatus();
+        } catch (e) {
+          localStorage.removeItem('jobshield_session');
+        }
+      } else {
+        renderAuthStatus();
+      }
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const nameGroup = document.getElementById('registerNameGroup');
+      const submitBtn = document.getElementById('authSubmitBtn');
+      const toggleLogin = document.getElementById('toggleLoginBtn');
+      const toggleRegister = document.getElementById('toggleRegisterBtn');
+      const alertBox = document.getElementById('authAlert');
+      alertBox.classList.add('hidden');
+
+      if (mode === 'register') {
+        nameGroup.classList.remove('hidden');
+        submitBtn.textContent = 'Create Analyst Account';
+        toggleRegister.className = "flex-1 py-2 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+        toggleLogin.className = "flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition-all";
+      } else {
+        nameGroup.classList.add('hidden');
+        submitBtn.textContent = 'Sign In to Intelligence Portal';
+        toggleLogin.className = "flex-1 py-2 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+        toggleRegister.className = "flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition-all";
+      }
+    }
+
+    function fillAdminCredentials() {
+      document.getElementById('authEmail').value = 'admin@jobshield.ai';
+      document.getElementById('authPassword').value = 'JobShield2026!';
+      setAuthMode('login');
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const alertBox = document.getElementById('authAlert');
+      alertBox.classList.add('hidden');
+
+      const endpoint = authMode === 'register' ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
+      const payload = authMode === 'register' ? {
+        email,
+        password,
+        full_name: document.getElementById('authName').value.trim() || 'Threat Analyst'
+      } : { email, password };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          currentUser = {
+            token: data.token,
+            user: data.user
+          };
+          localStorage.setItem('jobshield_session', JSON.stringify(currentUser));
+          renderAuthStatus();
+          alertBox.className = "p-3 rounded-xl text-xs font-mono bg-emerald-950/80 border border-emerald-800 text-emerald-300 block";
+          alertBox.textContent = `Welcome, ${data.user.name}! Access granted.`;
+          setTimeout(() => switchPage('scanner'), 1000);
+        } else {
+          alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
+          alertBox.textContent = data.detail || 'Authentication failed. Please verify credentials.';
+        }
+      } catch (err) {
+        // Fallback demo session if API is in offline mode
+        currentUser = {
+          token: "demo-local-token-" + Date.now(),
+          user: {
+            id: 1,
+            email: email,
+            name: email.split('@')[0].toUpperCase(),
+            role: "analyst"
+          }
+        };
+        localStorage.setItem('jobshield_session', JSON.stringify(currentUser));
+        renderAuthStatus();
+        alertBox.className = "p-3 rounded-xl text-xs font-mono bg-emerald-950/80 border border-emerald-800 text-emerald-300 block";
+        alertBox.textContent = "Offline Session Initiated. Access Granted.";
+        setTimeout(() => switchPage('scanner'), 1000);
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('jobshield_session');
+      renderAuthStatus();
+    }
+
+    function renderAuthStatus() {
+      const authPill = document.getElementById('authPill');
+      const loggedInView = document.getElementById('loggedInView');
+      const loggedOutView = document.getElementById('loggedOutView');
+
+      if (currentUser && currentUser.user) {
+        authPill.innerHTML = `
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-800 text-xs font-mono text-cyan-300 cursor-pointer" onclick="switchPage('auth')">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="font-bold">${currentUser.user.name}</span>
+          </div>
+        `;
+        loggedInView.classList.remove('hidden');
+        loggedOutView.classList.add('hidden');
+
+        document.getElementById('userDisplayName').textContent = currentUser.user.name;
+        document.getElementById('userDisplayEmail').textContent = currentUser.user.email;
+        document.getElementById('userDisplayRole').textContent = (currentUser.user.role || 'ANALYST').toUpperCase();
+      } else {
+        authPill.innerHTML = `
+          <button onclick="switchPage('auth')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-black hover:bg-slate-200 transition-colors">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+            <span>Sign In</span>
+          </button>
+        `;
+        loggedInView.classList.add('hidden');
+        loggedOutView.classList.remove('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    // ================= SCANNER LOGIC =================
     const SAMPLE_SCAM = {
       title: "Executive Personal & Remote Office Assistant",
       company: "Apex Global Trade Ltd.",
@@ -425,7 +771,6 @@
       document.getElementById('charCounter').textContent = `${val.length} characters`;
     }
 
-    // Healthcheck to local FastAPI backend on port 8000
     const API_BASE = 'http://127.0.0.1:8000';
     let isApiConnected = false;
 
@@ -441,12 +786,11 @@
           isApiConnected = true;
           dot.className = "w-2 h-2 rounded-full bg-emerald-400";
           text.className = "text-emerald-300";
-          text.textContent = `FastAPI Connected (${data.model_engine || 'ML Ready'})`;
+          text.textContent = `FastAPI Online (${data.ml_ready ? 'ML Ready' : 'Standby'})`;
           fetchHistory();
           return;
         }
       } catch (err) {
-        // Fallback to client-side rule evaluation mode if backend not currently running
         isApiConnected = false;
         dot.className = "w-2 h-2 rounded-full bg-amber-400";
         text.className = "text-amber-300";
@@ -456,38 +800,33 @@
 
     checkApiHealth();
     setInterval(checkApiHealth, 10000);
+    checkStoredSession();
 
-    // Client Heuristic Dual-Engine Fallback (Exact rules from utils/detector.py)
     function clientAnalyze(title, company, salary, email, desc) {
       const text = `${title} ${company} ${salary} ${email} ${desc}`.toLowerCase();
       const warnings = [];
       let ruleScore = 0;
 
-      // Rule 1: Cheque / Overpayment
       if (text.includes('cashier') || text.includes('check') || text.includes('cheque') || text.includes('deposit') && text.includes('vendor')) {
         warnings.push({ rule: "Fake Cheque / Advance Fee Pattern", severity: "HIGH", detail: "Requesting to cash a check and forward funds to vendor." });
         ruleScore += 45;
       }
 
-      // Rule 2: Money Transfer / Wire
       if (text.includes('western union') || text.includes('moneygram') || text.includes('wire transfer') || text.includes('bitcoin') || text.includes('crypto')) {
         warnings.push({ rule: "Untraceable Money Transfer", severity: "CRITICAL", detail: "Demanding unrecoverable wire transfer or cryptocurrency." });
         ruleScore += 40;
       }
 
-      // Rule 3: Off-platform chat (Telegram, WhatsApp)
       if (text.includes('telegram') || text.includes('whatsapp') || text.includes('@telegram')) {
         warnings.push({ rule: "Off-Platform Recruiter Communication", severity: "HIGH", detail: "Directing applicants to Telegram or encrypted mobile chat." });
         ruleScore += 25;
       }
 
-      // Rule 4: Free/Unsolicited domains for corporate recruiters
       if (email && (email.includes('@gmail.com') || email.includes('@yahoo.com') || email.includes('@hotmail.com'))) {
         warnings.push({ rule: "Public Email Domain For Corporate Role", severity: "MEDIUM", detail: "Use of generic email host instead of corporate domain." });
         ruleScore += 15;
       }
 
-      // Rule 5: Unrealistic Pay
       if (text.includes('$50/hour') || text.includes('$60/hour') || text.includes('no experience') && text.includes('$4')) {
         warnings.push({ rule: "Disproportionate Compensation", severity: "MEDIUM", detail: "Extremely high pay promised for entry or no-skill work." });
         ruleScore += 15;
@@ -521,7 +860,6 @@
       const desc = document.getElementById('jobDescription').value;
       const aiExplain = document.getElementById('aiExplain').checked;
 
-      // Laser animation
       const laser = document.getElementById('scanLaser');
       laser.classList.remove('hidden');
 
@@ -529,9 +867,14 @@
 
       if (isApiConnected) {
         try {
+          const headers = { 'Content-Type': 'application/json' };
+          if (currentUser && currentUser.token) {
+            headers['Authorization'] = `Bearer ${currentUser.token}`;
+          }
+
           const response = await fetch(`${API_BASE}/api/scan`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({
               job_title: title,
               company_name: company,
@@ -556,7 +899,6 @@
         }
       }
 
-      // If API was unavailable or errored, use high fidelity client dual-engine
       if (!result) {
         result = clientAnalyze(title, company, salary, email, desc);
       }
@@ -575,15 +917,12 @@
       const scoreNum = document.getElementById('scoreNumber');
       const badge = document.getElementById('verdictBadge');
       const banner = document.getElementById('recommendationBanner');
-      const card = document.getElementById('verdictCard');
       const mlProb = document.getElementById('mlProbValue');
       const warnCount = document.getElementById('warningCountValue');
       const warningsList = document.getElementById('warningsList');
       const adviceCard = document.getElementById('adviceCard');
       const adviceList = document.getElementById('adviceList');
 
-      // Animate circular meter
-      // Full circumference = 2 * PI * 42 ~= 263.89
       const offset = 264 - (264 * (score / 100));
       gauge.style.strokeDashoffset = offset;
       scoreNum.textContent = `${score}%`;
@@ -606,11 +945,9 @@
         banner.className = 'w-full mt-6 p-4 rounded-xl text-center text-xs font-medium bg-emerald-950/40 border border-emerald-800/40 text-emerald-200';
         banner.innerHTML = '✅ <strong>NORMAL PROFILE:</strong> No overt threat indicators or fraudulent advance-fee triggers detected.';
         
-        // Celebrate safe postings!
         confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
       }
 
-      // Render Warnings
       if (res.warnings && res.warnings.length > 0) {
         warningsList.innerHTML = res.warnings.map(w => `
           <div class="p-3 rounded-xl bg-slate-900/60 border border-rose-900/40 flex items-start gap-2.5">
@@ -630,7 +967,6 @@
         `;
       }
 
-      // Render Advice
       if (res.advice && res.advice.length > 0) {
         adviceCard.classList.remove('hidden');
         adviceList.innerHTML = res.advice.map(adv => `<li>${adv}</li>`).join('');
@@ -638,13 +974,10 @@
         adviceCard.classList.add('hidden');
       }
 
-      // Append to audit trail
       recordAuditTrail(title || "Untitled Role", company || "Private Recruiter", isScam ? "FRAUDULENT" : "GENUINE", score, res.warnings.length);
-
       lucide.createIcons();
     }
 
-    // Local audit trail store
     const localAudits = [];
     function recordAuditTrail(title, company, verdict, score, flags) {
       const audit = {

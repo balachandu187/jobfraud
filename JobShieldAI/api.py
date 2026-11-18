@@ -9,7 +9,7 @@ import os
 import sys
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -26,11 +26,12 @@ from utils.risk_analyzer import RiskAnalyzer
 from utils.explanation import get_safety_recommendations
 from utils.ollama_client import OllamaClient
 from database.db_manager import DatabaseManager
+from utils.auth import hash_password, verify_password, create_auth_token, verify_auth_token
 
 app = FastAPI(
     title="JobShield AI — Cyber Threat Intelligence API",
-    description="Dual-Engine Fake Job and Recruitment Scam Detection API",
-    version="2.0.0"
+    description="Dual-Engine Fake Job and Recruitment Scam Detection API with Enterprise Security",
+    version="2.1.0"
 )
 
 # Enable CORS for local development & frontend
@@ -49,10 +50,39 @@ detector = ScamDetector()
 analyzer = RiskAnalyzer()
 ollama = OllamaClient()
 
+# Seed default administrator / security officer if no users exist
+if not db.get_user_by_email("admin@jobshield.ai"):
+    pw_hash, salt = hash_password("JobShield2026!")
+    db.create_user("admin@jobshield.ai", pw_hash, salt, "Chief Security Officer", role="admin")
+
+# Security Dependency
+def get_current_user_optional(authorization: Optional[str] = Header(None)) -> Optional[Dict[str, Any]]:
+    """Extracts authenticated user from Bearer header if provided."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.split("Bearer ", 1)[1].strip()
+    return verify_auth_token(token)
+
+def require_auth(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
+    """Guards endpoints ensuring a valid cryptographic bearer token is presented."""
+    user = get_current_user_optional(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required or session expired.")
+    return user
+
 
 # ---------------------------------------------------------
 # Pydantic Schemas
 # ---------------------------------------------------------
+
+class RegisterRequest(BaseModel):
+    email: str = Field(..., min_length=3)
+    password: str = Field(..., min_length=6)
+    full_name: str = Field(..., min_length=2)
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 class ScanRequest(BaseModel):
     job_title: Optional[str] = ""
@@ -77,6 +107,54 @@ class OllamaExplainRequest(BaseModel):
 # ---------------------------------------------------------
 # API Endpoints
 # ---------------------------------------------------------
+
+@app.post("/api/auth/register")
+def register_user(req: RegisterRequest) -> Dict[str, Any]:
+    """Registers a new security analyst with salted PBKDF2 credentials."""
+    existing = db.get_user_by_email(req.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="An account with this email address already exists.")
+    
+    pw_hash, salt = hash_password(req.password)
+    user_id = db.create_user(req.email, pw_hash, salt, req.full_name)
+    if not user_id:
+        raise HTTPException(status_code=500, detail="Failed to create user account.")
+    
+    token = create_auth_token(user_id, req.email.lower().strip(), "analyst", req.full_name.strip())
+    return {
+        "success": True,
+        "token": token,
+        "user": {
+            "id": user_id,
+            "email": req.email.lower().strip(),
+            "name": req.full_name.strip(),
+            "role": "analyst"
+        }
+    }
+
+@app.post("/api/auth/login")
+def login_user(req: LoginRequest) -> Dict[str, Any]:
+    """Authenticates credentials and issues cryptographic bearer token."""
+    user = db.get_user_by_email(req.email)
+    if not user or not verify_password(req.password, user["password_hash"], user["salt"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    
+    token = create_auth_token(user["id"], user["email"], user["role"], user["full_name"])
+    return {
+        "success": True,
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "name": user["full_name"],
+            "role": user["role"]
+        }
+    }
+
+@app.get("/api/auth/me")
+def get_current_user_profile(user: Dict[str, Any] = Depends(require_auth)) -> Dict[str, Any]:
+    """Validates session and returns current authenticated identity."""
+    return {"authenticated": True, "user": user}
 
 @app.get("/api/status")
 def get_system_status() -> Dict[str, Any]:
