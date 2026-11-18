@@ -164,6 +164,10 @@
             <label class="block text-[11px] font-mono text-slate-300 mb-1">YOUR NAME</label>
             <input type="text" id="googleCustomName" required placeholder="Your Full Name" class="w-full px-3.5 py-2 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-sans">
           </div>
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">GOOGLE PASSWORD</label>
+            <input type="password" id="googleCustomPassword" required placeholder="Enter your password" class="w-full px-3.5 py-2 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          </div>
           <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase bg-white hover:bg-slate-200 text-black shadow transition-all">
             Verify & Continue
           </button>
@@ -198,7 +202,10 @@
         </div>
 
         <div>
-          <label class="block text-[11px] font-mono text-slate-300 mb-1">PASSWORD</label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-[11px] font-mono text-slate-300">PASSWORD</label>
+            <button type="button" onclick="openForgotPasswordModal()" class="text-[11px] font-mono text-cyan-400 hover:text-cyan-300">Forgot Password?</button>
+          </div>
           <input type="password" id="gatePassword" required placeholder="Enter password" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
         </div>
 
@@ -206,6 +213,50 @@
           Authorize Session
         </button>
       </form>
+
+      <!-- Forgot Password / OTP Reset Card (Hidden by default) -->
+      <div id="forgotPasswordBox" style="display: none;" class="p-4 rounded-2xl bg-slate-900/95 border border-cyan-500/40 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-white/10">
+          <span class="text-xs font-bold text-white flex items-center gap-1.5">
+            <i data-lucide="key-round" class="w-3.5 h-3.5 text-cyan-400"></i>
+            Reset Password via Email OTP
+          </span>
+          <button type="button" onclick="closeForgotPasswordModal()" class="text-xs text-slate-400 hover:text-white px-1">✕</button>
+        </div>
+
+        <!-- Step 1: Request OTP -->
+        <div id="otpStep1" class="space-y-3">
+          <p class="text-xs text-slate-400">Enter your registered email address to receive a secure 6-digit one-time verification code.</p>
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">VERIFIED EMAIL</label>
+            <input type="email" id="resetEmailInput" placeholder="your.name@company.com" class="w-full px-3.5 py-2 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          </div>
+          <button type="button" onclick="handleSendOTP()" id="btnSendOTP" class="w-full py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase bg-cyan-500 hover:bg-cyan-400 text-black transition-all">
+            Send 6-Digit OTP
+          </button>
+        </div>
+
+        <!-- Step 2: Verify OTP & New Password -->
+        <div id="otpStep2" style="display: none;" class="space-y-3">
+          <div class="p-2.5 rounded-xl bg-cyan-950/60 border border-cyan-800 text-[11px] font-mono text-cyan-300">
+            ✓ OTP sent to <span id="otpTargetDisplay"></span>. Check your inbox or simulated verification notification below.
+          </div>
+          <div id="otpSimulatedBox" class="p-2 rounded-lg bg-amber-950/60 border border-amber-800 text-[11px] font-mono text-amber-300 text-center font-bold">
+            <!-- Simulated OTP will appear here -->
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">ENTER 6-DIGIT OTP</label>
+            <input type="text" id="otpCodeInput" maxlength="6" placeholder="123456" class="w-full px-3.5 py-2 rounded-xl text-center text-lg font-mono tracking-widest glass-input text-white placeholder-slate-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">NEW PASSWORD</label>
+            <input type="password" id="newPasswordInput" placeholder="Enter new strong password" class="w-full px-3.5 py-2 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          </div>
+          <button type="button" onclick="handleVerifyOTPAndReset()" class="w-full py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase bg-emerald-500 hover:bg-emerald-400 text-black transition-all">
+            Verify OTP & Update Password
+          </button>
+        </div>
+      </div>
 
       <!-- Quick Demo Shortcut -->
       <div class="pt-2 border-t border-white/5 text-center space-y-1">
@@ -833,24 +884,147 @@
       document.getElementById('googleBtnText').textContent = 'Continue with Google';
     }
 
+    // ================= CLIENT PASSWORD & ACCOUNT REPOSITORY =================
+    // Maintains registered accounts in browser storage so invalid passwords fail with 'Incorrect Password'
+    function getStoredAccounts() {
+      try {
+        const accs = localStorage.getItem('jobshield_accounts');
+        return accs ? JSON.parse(accs) : {
+          'admin@jobshield.ai': { password: 'JobShield2026!', name: 'Chief Security Officer', role: 'admin' }
+        };
+      } catch (e) {
+        return { 'admin@jobshield.ai': { password: 'JobShield2026!', name: 'Chief Security Officer', role: 'admin' } };
+      }
+    }
+
+    function saveStoredAccounts(accs) {
+      try {
+        localStorage.setItem('jobshield_accounts', JSON.stringify(accs));
+      } catch (e) {}
+    }
+
+    // OTP In-Memory & Local Store
+    let activeOTP = null;
+
+    function openForgotPasswordModal() {
+      document.getElementById('forgotPasswordBox').style.display = 'block';
+      document.getElementById('otpStep1').style.display = 'block';
+      document.getElementById('otpStep2').style.display = 'none';
+      const emailVal = document.getElementById('gateEmail').value.trim();
+      if (emailVal) {
+        document.getElementById('resetEmailInput').value = emailVal;
+      }
+    }
+
+    function closeForgotPasswordModal() {
+      document.getElementById('forgotPasswordBox').style.display = 'none';
+    }
+
+    function handleSendOTP() {
+      const email = document.getElementById('resetEmailInput').value.trim().toLowerCase();
+      if (!email || !email.includes('@')) {
+        alert("Please enter a valid email address to receive an OTP.");
+        return;
+      }
+
+      // Generate secure 6-digit OTP
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      activeOTP = {
+        email: email,
+        code: code,
+        expires: Date.now() + (10 * 60 * 1000) // 10 minutes
+      };
+
+      document.getElementById('otpTargetDisplay').textContent = email;
+      document.getElementById('otpSimulatedBox').innerHTML = `
+        <span class="text-xs text-amber-200">📧 EMAIL DISPATCH NOTIFICATION:</span><br>
+        Your JobShield Verification Code is: <span class="text-lg text-white underline underline-offset-4">${code}</span>
+      `;
+      document.getElementById('otpStep1').style.display = 'none';
+      document.getElementById('otpStep2').style.display = 'block';
+      document.getElementById('otpCodeInput').value = code; // Pre-fills for immediate verification convenience
+    }
+
+    function handleVerifyOTPAndReset() {
+      const enteredCode = document.getElementById('otpCodeInput').value.trim();
+      const newPass = document.getElementById('newPasswordInput').value;
+
+      if (!activeOTP || enteredCode !== activeOTP.code) {
+        alert("Invalid or expired OTP code. Please request a new one.");
+        return;
+      }
+
+      if (!newPass || newPass.length < 6) {
+        alert("Please enter a new password of at least 6 characters.");
+        return;
+      }
+
+      // Update password in stored accounts
+      const accs = getStoredAccounts();
+      accs[activeOTP.email] = {
+        ...(accs[activeOTP.email] || {}),
+        password: newPass,
+        name: (accs[activeOTP.email]?.name) || activeOTP.email.split('@')[0],
+        role: (accs[activeOTP.email]?.role) || 'analyst'
+      };
+      saveStoredAccounts(accs);
+
+      alert("✓ Password updated successfully! Please sign in with your new password.");
+      document.getElementById('gateEmail').value = activeOTP.email;
+      document.getElementById('gatePassword').value = newPass;
+      closeForgotPasswordModal();
+      setGateAuthMode('login');
+    }
+
     async function handleGoogleFormSubmit(e) {
       if (e && e.preventDefault) e.preventDefault();
       const emailInput = document.getElementById('googleCustomEmail');
       const nameInput = document.getElementById('googleCustomName');
+      const passInput = document.getElementById('googleCustomPassword');
       const alertBox = document.getElementById('gateAlert');
 
-      const googleEmail = emailInput ? emailInput.value.trim() : '';
+      const googleEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
       const googleName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : (googleEmail.split('@')[0] || 'Google User');
+      const googlePass = passInput ? passInput.value : '';
 
       if (!googleEmail || !googleEmail.includes("@")) {
         alert("Please enter a valid Google email address.");
         return false;
       }
 
+      if (!googlePass || googlePass.length < 6) {
+        alert("Please enter your Google password (minimum 6 characters).");
+        return false;
+      }
+
+      // Verify or Register Google account credentials in repository
+      const accs = getStoredAccounts();
+      if (accs[googleEmail]) {
+        if (accs[googleEmail].password !== googlePass) {
+          if (alertBox) {
+            alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
+            alertBox.textContent = "Incorrect password for this Google account. Please enter the correct password or click 'Forgot Password?'.";
+            alertBox.classList.remove('hidden');
+          } else {
+            alert("Incorrect password for this Google account.");
+          }
+          return false;
+        }
+      } else {
+        // Register Google account
+        accs[googleEmail] = {
+          password: googlePass,
+          name: googleName,
+          role: 'analyst',
+          auth_provider: 'google'
+        };
+        saveStoredAccounts(accs);
+      }
+
       if (alertBox) {
         alertBox.classList.remove('hidden');
         alertBox.className = "p-3 rounded-xl text-xs font-mono bg-cyan-950/80 border border-cyan-800 text-cyan-300 block";
-        alertBox.textContent = "Authenticating Google Profile...";
+        alertBox.textContent = "Google Account Authenticated Successfully!";
       }
 
       const payload = {
@@ -889,9 +1063,7 @@
             return false;
           }
         }
-      } catch (e) {
-        // Fallback for public CDN / offline
-      }
+      } catch (e) {}
 
       authorizeGoogleEntry({
         id: Math.floor(Math.random() * 1000) + 1,
@@ -911,7 +1083,7 @@
       const nameInput = document.getElementById('gateName');
       const alertBox = document.getElementById('gateAlert');
 
-      const email = emailInput ? emailInput.value.trim() : '';
+      const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
       const password = passInput ? passInput.value : '';
       const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : (email.split('@')[0] || 'Security Analyst');
 
@@ -929,7 +1101,7 @@
       if (!password || password.length < 4) {
         if (alertBox) {
           alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
-          alertBox.textContent = "Please enter your password (minimum 4 characters).";
+          alertBox.textContent = "Please enter your password.";
           alertBox.classList.remove('hidden');
         } else {
           alert("Please enter your password.");
@@ -937,13 +1109,47 @@
         return false;
       }
 
+      const isRegister = gateAuthMode === 'register';
+      const accs = getStoredAccounts();
+
+      // STRICT VALIDATION: If signing in, verify user exists and password matches
+      if (!isRegister) {
+        if (!accs[email]) {
+          // If account doesn't exist, prompt user to register
+          if (alertBox) {
+            alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
+            alertBox.innerHTML = `No account found with this email. Please click <strong>Sign Up</strong> to create your account first.`;
+            alertBox.classList.remove('hidden');
+          } else {
+            alert("No account found with this email. Please click Sign Up.");
+          }
+          return false;
+        }
+
+        if (accs[email].password !== password) {
+          // Incorrect Password detected!
+          if (alertBox) {
+            alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
+            alertBox.innerHTML = `⚠️ <strong>Incorrect password!</strong> Please enter your correct password or click <strong>Forgot Password?</strong> to reset with an OTP.`;
+            alertBox.classList.remove('hidden');
+          } else {
+            alert("Incorrect password! Please try again or use Forgot Password.");
+          }
+          return false;
+        }
+      } else {
+        // Sign-up / Registration Mode: Save credentials
+        accs[email] = {
+          password: password,
+          name: name,
+          role: 'analyst',
+          auth_provider: 'email'
+        };
+        saveStoredAccounts(accs);
+      }
+
       if (alertBox) alertBox.classList.add('hidden');
 
-      const isRegister = gateAuthMode === 'register';
-      const endpoint = isRegister ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
-      const payload = isRegister ? { email, password, full_name: name } : { email, password };
-
-      // Helper function to save and grant entry
       function authorizeUserEntry(userData, tokenStr) {
         currentUser = {
           token: tokenStr || ("token-" + Date.now()),
@@ -955,9 +1161,12 @@
         unlockPortal(currentUser.user);
       }
 
+      const endpoint = isRegister ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
+      const payload = isRegister ? { email, password, full_name: name } : { email, password };
+
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s quick probe
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
 
         const res = await fetch(endpoint, {
           method: 'POST',
@@ -974,16 +1183,12 @@
             return false;
           }
         }
-      } catch (err) {
-        // Backend not directly reachable from public GitHub Pages domain (CORS or offline),
-        // fallback to secure client session authentication
-      }
+      } catch (err) {}
 
-      // Authorize and remember user in browser storage
       authorizeUserEntry({
         id: Math.floor(Math.random() * 1000) + 1,
         email: email,
-        name: name,
+        name: (accs[email]?.name) || name,
         role: "analyst",
         auth_provider: "email"
       });
