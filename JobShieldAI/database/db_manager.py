@@ -50,30 +50,66 @@ class DatabaseManager:
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     email TEXT UNIQUE NOT NULL,
-                    password_hash TEXT NOT NULL,
-                    salt TEXT NOT NULL,
+                    password_hash TEXT DEFAULT '',
+                    salt TEXT DEFAULT '',
                     full_name TEXT NOT NULL,
                     role TEXT DEFAULT 'analyst',
-                    created_at TEXT NOT NULL
+                    auth_provider TEXT DEFAULT 'local',
+                    avatar_url TEXT DEFAULT '',
+                    created_at TEXT NOT NULL,
+                    last_login TEXT
                 )
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
             conn.commit()
 
-    def create_user(self, email: str, password_hash: str, salt: str, full_name: str, role: str = "analyst") -> Optional[int]:
+    def create_user(self, email: str, password_hash: str, salt: str, full_name: str, role: str = "analyst", auth_provider: str = "local", avatar_url: str = "") -> Optional[int]:
         """Creates a new user record. Returns user id or None if duplicate."""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT INTO users (email, password_hash, salt, full_name, role, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (email.lower().strip(), password_hash, salt, full_name.strip(), role, now))
+                    INSERT INTO users (email, password_hash, salt, full_name, role, auth_provider, avatar_url, created_at, last_login)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (email.lower().strip(), password_hash, salt, full_name.strip(), role, auth_provider, avatar_url, now, now))
                 conn.commit()
                 return cursor.lastrowid
         except sqlite3.IntegrityError:
             return None
+
+    def upsert_google_user(self, email: str, full_name: str, avatar_url: str = "") -> Dict[str, Any]:
+        """Creates or logs in a Google-authenticated user and returns their profile."""
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        clean_email = email.lower().strip()
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, email, full_name, role, auth_provider, avatar_url FROM users WHERE email = ?", (clean_email,))
+            row = cursor.fetchone()
+            if row:
+                user = dict(row)
+                cursor.execute("UPDATE users SET last_login = ?, avatar_url = ? WHERE id = ?", (now, avatar_url or user.get("avatar_url", ""), user["id"]))
+                conn.commit()
+                user["last_login"] = now
+                user["avatar_url"] = avatar_url or user.get("avatar_url", "")
+                return user
+            else:
+                cursor.execute("""
+                    INSERT INTO users (email, password_hash, salt, full_name, role, auth_provider, avatar_url, created_at, last_login)
+                    VALUES (?, '', '', ?, 'analyst', 'google', ?, ?, ?)
+                """, (clean_email, full_name.strip(), avatar_url, now, now))
+                conn.commit()
+                new_id = cursor.lastrowid
+                return {
+                    "id": new_id,
+                    "email": clean_email,
+                    "full_name": full_name.strip(),
+                    "role": "analyst",
+                    "auth_provider": "google",
+                    "avatar_url": avatar_url,
+                    "created_at": now,
+                    "last_login": now
+                }
 
     def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Retrieves a user by email address."""

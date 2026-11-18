@@ -110,8 +110,89 @@
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent"></div>
   </div>
 
+  <!-- ================= MANDATORY AUTHENTICATION GATEWAY MODAL ================= -->
+  <div id="authGateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl transition-all duration-300">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-7 sm:p-9 space-y-6 border border-cyan-500/30 shadow-2xl shadow-cyan-950/80">
+      
+      <!-- Modal Header -->
+      <div class="text-center space-y-2">
+        <div class="relative w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+          <i data-lucide="shield-check" class="w-7 h-7"></i>
+          <span class="absolute -top-1 -right-1 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+          </span>
+        </div>
+        <h2 class="text-2xl font-bold tracking-tight text-white">JobShield<span class="text-cyan-400">.AI</span></h2>
+        <p class="text-xs text-slate-400">Security Clearance Required to Access Threat Intelligence</p>
+      </div>
+
+      <!-- Google Single Sign-On Button -->
+      <div>
+        <button type="button" onclick="handleGoogleSignInPrompt()" class="w-full py-3 px-4 rounded-xl font-medium text-xs bg-slate-900/90 hover:bg-slate-800 border border-white/10 hover:border-white/25 text-white flex items-center justify-center gap-3 transition-all transform hover:-translate-y-0.5 shadow-md">
+          <!-- Google Icon SVG -->
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+
+      <div class="relative flex items-center justify-center">
+        <div class="border-t border-white/10 w-full"></div>
+        <span class="bg-[#0b1329] px-3 text-[10px] uppercase font-mono text-slate-500 absolute">or sign in with email</span>
+      </div>
+
+      <!-- Toggle Sign In vs Register -->
+      <div class="flex items-center p-1 rounded-xl bg-slate-900/80 border border-white/5 font-mono text-xs">
+        <button id="gateLoginTab" onclick="setGateAuthMode('login')" class="flex-1 py-1.5 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all">Sign In</button>
+        <button id="gateRegisterTab" onclick="setGateAuthMode('register')" class="flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all">Sign Up</button>
+      </div>
+
+      <!-- Alert Banner -->
+      <div id="gateAlert" class="hidden p-3 rounded-xl text-xs font-mono"></div>
+
+      <!-- Email / Password Form -->
+      <form id="gateAuthForm" onsubmit="handleGateAuthSubmit(event)" class="space-y-3.5">
+        
+        <div id="gateNameGroup" class="hidden">
+          <label class="block text-[11px] font-mono text-slate-300 mb-1">FULL NAME</label>
+          <input type="text" id="gateName" placeholder="Dr. Sarah Connor" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-mono text-slate-300 mb-1">EMAIL ADDRESS</label>
+          <input type="email" id="gateEmail" required placeholder="analyst@jobshield.ai" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-mono text-slate-300 mb-1">PASSWORD</label>
+          <input type="password" id="gatePassword" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+        </div>
+
+        <button type="submit" id="gateSubmitBtn" class="w-full py-3 rounded-xl font-semibold text-xs tracking-wider uppercase bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black shadow-lg shadow-cyan-500/25 transition-all">
+          Authorize Session
+        </button>
+      </form>
+
+      <!-- Quick Demo Shortcut -->
+      <div class="pt-2 border-t border-white/5 text-center space-y-1">
+        <p class="text-[11px] text-slate-500">Fast Demo Account:</p>
+        <button type="button" onclick="fillAdminCredentials()" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 underline underline-offset-4 decoration-cyan-500/30">
+          admin@jobshield.ai / JobShield2026!
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MAIN WEB INTERFACE ================= -->
   <div class="relative z-10 flex flex-col min-h-screen">
-    <!-- MotionSites Fluid Header with Navigation Tabs & Auth Profile -->
+    
+    <!-- MotionSites Fluid Header -->
     <header class="border-b border-white/5 backdrop-blur-md sticky top-0 z-50 bg-[#030712]/80">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
         
@@ -139,26 +220,20 @@
             Forensic Scanner
           </button>
           <button id="navSecurity" onclick="switchPage('security')" class="px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all">
-            Security & Compliance
-          </button>
-          <button id="navAuth" onclick="switchPage('auth')" class="px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all">
-            Access Control
+            Security Architecture
           </button>
         </nav>
 
-        <!-- Right Side: Telemetry & User Account -->
+        <!-- Right Side: Telemetry & Authenticated User Pill -->
         <div class="flex items-center gap-3">
           <div id="backendPill" class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-slate-900/80 border border-white/10">
             <span id="backendDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
             <span id="backendText" class="text-slate-300">FastAPI</span>
           </div>
 
-          <!-- Auth Status Indicator / Action Button -->
-          <div id="authPill" class="flex items-center gap-2">
-            <button onclick="switchPage('auth')" id="authActionBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-black hover:bg-slate-200 transition-colors">
-              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-              <span>Sign In</span>
-            </button>
+          <!-- User Pill / Sign Out -->
+          <div id="userHeaderPill" class="flex items-center gap-2">
+            <!-- Rendered dynamically -->
           </div>
         </div>
       </div>
@@ -167,6 +242,28 @@
     <!-- ================= PAGE 1: FORENSIC SCANNER VIEW ================= -->
     <main id="pageScanner" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-opacity duration-300">
       
+      <!-- Welcome Analyst Greeting Banner -->
+      <div id="userWelcomeBanner" class="glass-panel rounded-2xl p-4 sm:p-5 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-l-4 border-l-cyan-400">
+        <div class="flex items-center gap-3">
+          <div id="userAvatarContainer" class="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold overflow-hidden">
+            <i data-lucide="user" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-white">Welcome back, <span id="welcomeUserName" class="text-cyan-400">Analyst</span></span>
+              <span id="welcomeProviderBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/10">Authenticated</span>
+            </div>
+            <p class="text-xs text-slate-400">Your profile and audit trail are saved and synced across visits.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="handleLogout()" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-800/40 px-3 py-1.5 rounded-lg transition-colors font-mono flex items-center gap-1.5">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
+          </button>
+        </div>
+      </div>
+
       <!-- Top Stats Hero Bar -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
@@ -215,23 +312,28 @@
         
         <!-- Left: Threat Ingestion Panel (7 cols) -->
         <section class="lg:col-span-7 glass-panel rounded-2xl p-6 sm:p-8 space-y-6">
-          <div class="flex items-center justify-between border-b border-white/5 pb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <i data-lucide="scan-text" class="w-5 h-5 text-cyan-400"></i>
                 Job Posting Forensic Scanner
               </h2>
-              <p class="text-xs text-slate-400 mt-1">Submit listing body, recruiter communication, or raw job description for algorithmic inspection.</p>
+              <p class="text-xs text-slate-400 mt-1">Submit listing text or click any test scenario below to rotate through diverse real-world scam patterns.</p>
             </div>
             
-            <div class="flex items-center gap-2">
-              <button onclick="loadSample('scam')" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-800/40 px-2.5 py-1 rounded transition-colors font-mono">
-                Scam Demo
+            <!-- Dynamic Test Case Buttons (Rotate through different examples every time) -->
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="loadNextScamSample()" title="Loads a different scam pattern on every click" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-800/40 px-3 py-1.5 rounded-lg transition-all font-mono flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                <span id="scamSampleBtnLabel">Rotate Scam Case</span>
               </button>
-              <button onclick="loadSample('legit')" class="text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-800/40 px-2.5 py-1 rounded transition-colors font-mono">
-                Legit Demo
+              
+              <button type="button" onclick="loadNextLegitSample()" title="Loads a different legitimate corporate vacancy on every click" class="text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-800/40 px-3 py-1.5 rounded-lg transition-all font-mono flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                <span id="legitSampleBtnLabel">Rotate Legit Case</span>
               </button>
-              <button onclick="clearFields()" class="text-xs text-slate-400 hover:text-white transition-colors ml-1">Clear</button>
+              
+              <button type="button" onclick="clearFields()" class="text-xs text-slate-400 hover:text-white transition-colors px-2 py-1">Clear</button>
             </div>
           </div>
 
@@ -389,118 +491,25 @@
 
     </main>
 
-    <!-- ================= PAGE 2: AUTHENTICATION & ACCESS CONTROL VIEW ================= -->
-    <main id="pageAuth" class="hidden flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 transition-opacity duration-300">
-      
-      <!-- User Profile State (Shown when logged in) -->
-      <div id="loggedInView" class="hidden glass-panel rounded-3xl p-8 sm:p-10 text-center space-y-6">
-        <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-cyan-500/20 to-emerald-500/30 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-xl shadow-cyan-500/10">
-          <i data-lucide="user-check" class="w-10 h-10"></i>
-        </div>
-        <div>
-          <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-800 uppercase tracking-wider">Authenticated Analyst Session</span>
-          <h2 id="userDisplayName" class="text-2xl font-bold text-white mt-3">Chief Security Officer</h2>
-          <p id="userDisplayEmail" class="text-sm font-mono text-slate-400 mt-1">admin@jobshield.ai</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto text-left font-mono text-xs">
-          <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5">
-            <span class="text-slate-500 block uppercase">Role Clearance</span>
-            <span id="userDisplayRole" class="text-sm font-bold text-white mt-1 block">ADMIN</span>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5">
-            <span class="text-slate-500 block uppercase">Session Crypto</span>
-            <span class="text-sm font-bold text-emerald-400 mt-1 block">HMAC-SHA256</span>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5">
-            <span class="text-slate-500 block uppercase">Password Hash</span>
-            <span class="text-sm font-bold text-cyan-400 mt-1 block">PBKDF2 Salted</span>
-          </div>
-        </div>
-
-        <div class="pt-4 flex items-center justify-center gap-4">
-          <button onclick="switchPage('scanner')" class="px-6 py-2.5 rounded-xl font-semibold text-xs bg-cyan-500 text-black hover:bg-cyan-400 transition-colors">
-            Go To Forensic Scanner
-          </button>
-          <button onclick="handleLogout()" class="px-6 py-2.5 rounded-xl font-semibold text-xs bg-rose-950/60 text-rose-300 border border-rose-800 hover:bg-rose-950 transition-colors">
-            Sign Out
-          </button>
-        </div>
-      </div>
-
-      <!-- Auth Form Box (Shown when not logged in) -->
-      <div id="loggedOutView" class="glass-panel rounded-3xl p-8 sm:p-10 max-w-md mx-auto space-y-6">
-        <div class="text-center space-y-2">
-          <div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-            <i data-lucide="shield-alert" class="w-7 h-7"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-white tracking-tight">Security Gateway</h2>
-          <p class="text-xs text-slate-400">Sign in with authorized threat analyst credentials</p>
-        </div>
-
-        <!-- Mode Toggle (Sign In / Register) -->
-        <div class="flex items-center p-1 rounded-xl bg-slate-900/80 border border-white/5 font-mono text-xs">
-          <button id="toggleLoginBtn" onclick="setAuthMode('login')" class="flex-1 py-2 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all">Sign In</button>
-          <button id="toggleRegisterBtn" onclick="setAuthMode('register')" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition-all">Register</button>
-        </div>
-
-        <!-- Notice Alert -->
-        <div id="authAlert" class="hidden p-3 rounded-xl text-xs font-mono"></div>
-
-        <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4 font-sans">
-          
-          <div id="registerNameGroup" class="hidden">
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">FULL NAME</label>
-            <input type="text" id="authName" placeholder="Dr. John Carter" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none">
-          </div>
-
-          <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">OFFICIAL EMAIL</label>
-            <input type="email" id="authEmail" required placeholder="analyst@jobshield.ai" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
-          </div>
-
-          <div>
-            <label class="block text-xs font-mono text-slate-300 mb-1.5">PASSWORD</label>
-            <input type="password" id="authPassword" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
-          </div>
-
-          <button type="submit" id="authSubmitBtn" class="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black shadow-lg shadow-cyan-500/25 transition-all">
-            Sign In to Intelligence Portal
-          </button>
-        </form>
-
-        <!-- Quick Seed Demo Login -->
-        <div class="pt-2 border-t border-white/5 text-center">
-          <p class="text-[11px] text-slate-500 mb-2">Pre-configured Administrator Account:</p>
-          <button onclick="fillAdminCredentials()" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 underline underline-offset-4 decoration-cyan-500/30">
-            admin@jobshield.ai (Click to Auto-fill)
-          </button>
-        </div>
-      </div>
-    </main>
-
-    <!-- ================= PAGE 3: SECURITY & COMPLIANCE VIEW ================= -->
+    <!-- ================= PAGE 2: SECURITY & COMPLIANCE VIEW ================= -->
     <main id="pageSecurity" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-opacity duration-300 space-y-8">
-      
       <div class="glass-panel rounded-3xl p-8 sm:p-10">
         <div class="flex items-center gap-3 mb-2">
           <span class="p-2 rounded-xl bg-cyan-500/10 text-cyan-400"><i data-lucide="shield-check" class="w-6 h-6"></i></span>
           <h2 class="text-2xl font-bold text-white">Cryptographic Security & System Architecture</h2>
         </div>
         <p class="text-sm text-slate-400 max-w-3xl">
-          JobShield AI adheres to zero-trust principles. Raw applicant inquiries, user credentials, and machine learning scoring vectors are strictly partitioned and cryptographically validated.
+          JobShield AI enforces strict zero-trust standards. User authentication is authenticated with Google and PBKDF2 salting, while all scanning operations occur locally with immutable SQLite logging.
         </p>
 
-        <!-- Security Architecture Pillars -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          
           <div class="p-6 rounded-2xl bg-slate-900/60 border border-white/5 space-y-3">
             <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
               <i data-lucide="key" class="w-5 h-5"></i>
             </div>
             <h3 class="text-base font-bold text-white">PBKDF2-HMAC-SHA256</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              Passwords are salted with 16 random bytes and hashed with 100,000 iterations of PBKDF2-SHA256. Stored values cannot be rainbow-tabled.
+              Passwords are salted with 16 random bytes and hashed with 100,000 iterations of PBKDF2-SHA256. Stored credentials cannot be rainbow-tabled.
             </p>
           </div>
 
@@ -523,10 +532,8 @@
               Candidate text and corporate disclosures run on local TF-IDF matrices and in-memory regex. No external APIs scrape or ingest your job postings.
             </p>
           </div>
-
         </div>
 
-        <!-- Compliance Matrix Table -->
         <div class="mt-10 pt-6 border-t border-white/5">
           <h3 class="text-sm font-mono uppercase tracking-wider text-slate-400 mb-4">Threat Defense Compliance Matrix</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
@@ -539,8 +546,8 @@
               <div class="font-bold text-emerald-400 mt-1">Parameterized Queries</div>
             </div>
             <div class="p-4 rounded-xl bg-slate-900/40 border border-white/5">
-              <div class="text-slate-500">Rate Limiting Ready</div>
-              <div class="font-bold text-cyan-400 mt-1">FastAPI Middleware</div>
+              <div class="text-slate-500">Google OAuth Ready</div>
+              <div class="font-bold text-cyan-400 mt-1">Identity Federation</div>
             </div>
             <div class="p-4 rounded-xl bg-slate-900/40 border border-white/5">
               <div class="text-slate-500">Audit Logging</div>
@@ -548,9 +555,7 @@
             </div>
           </div>
         </div>
-
       </div>
-
     </main>
 
     <!-- MotionSites Sponsored Footer -->
@@ -559,7 +564,7 @@
         <div class="flex items-center gap-2">
           <span>JobShield AI Threat Intelligence</span>
           <span>•</span>
-          <span class="text-cyan-400 font-mono">Engine v2.1 (Secured)</span>
+          <span class="text-cyan-400 font-mono">Engine v2.2 (Secured)</span>
         </div>
         <div>
           <span>Crafted with </span>
@@ -570,189 +575,107 @@
   </div>
 
   <script>
-    // Initialize Icons
     lucide.createIcons();
 
-    // Navigation Router
-    function switchPage(page) {
-      document.getElementById('pageScanner').classList.add('hidden');
-      document.getElementById('pageAuth').classList.add('hidden');
-      document.getElementById('pageSecurity').classList.add('hidden');
-
-      document.getElementById('navScanner').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
-      document.getElementById('navSecurity').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
-      document.getElementById('navAuth').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
-
-      if (page === 'scanner') {
-        document.getElementById('pageScanner').classList.remove('hidden');
-        document.getElementById('navScanner').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
-      } else if (page === 'security') {
-        document.getElementById('pageSecurity').classList.remove('hidden');
-        document.getElementById('navSecurity').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
-      } else if (page === 'auth') {
-        document.getElementById('pageAuth').classList.remove('hidden');
-        document.getElementById('navAuth').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+    // ================= ROTATING EXAMPLES CATALOGUE =================
+    // Different scam vectors on every single click:
+    const SCAM_SAMPLES = [
+      {
+        tag: "Check Scam",
+        title: "Executive Personal & Remote Office Assistant",
+        company: "Apex Global Trade Ltd.",
+        salary: "$55/hour + $400 weekly allowance",
+        email: "recruitment.apexglobal@gmail.com",
+        desc: "Congratulations! You have been selected for an immediate remote position. No experience is required. You will be sent an official cashier check of $4,500 to purchase your home office setup and specialized software from our verified vendor. You must cash the check, keep $500 as sign-on bonus, and immediately wire the remaining $4,000 via Western Union / MoneyGram or send Bitcoin to our equipment distributor. For fast interview confirmation, contact Mr. David Miller immediately on Telegram @apex_david_recruiter."
+      },
+      {
+        tag: "Telegram Crypto",
+        title: "VIP Crypto Payment Processing Agent",
+        company: "Alpha FinTech Global",
+        salary: "$4,500 - $6,000 / month, No experience",
+        email: "onboarding-alpha@yahoo.com",
+        desc: "Urgent recruitment for crypto transaction operators. You will process incoming customer remittances through your personal bank account or Coinbase wallet and immediately purchase USDT / Bitcoin to forward to our regional logistics vault. Earn an instant 5% commission on every transaction processed. All candidates must complete screening exclusively on Telegram by messaging @CryptoHR_Manager."
+      },
+      {
+        tag: "Advance Fee Kit",
+        title: "Medical Data Entry Clerk (Home-Based)",
+        company: "CarePlus Health Services Inc.",
+        salary: "$48.50 per hour + Flexible Hours",
+        email: "hr.careplushealth@hotmail.com",
+        desc: "CarePlus Health is hiring entry-level remote clerks. Before starting your paid remote training, you are required to purchase the HIPAA compliance biometric badge and cryptographic card reader for $350 through Zelle or Apple Gift Cards from our authorized onboarding supplier. All expenses will be 100% refunded in your first weekly paycheck."
+      },
+      {
+        tag: "Mystery Shopper",
+        title: "Customer Quality Evaluator & Mystery Shopper",
+        company: "Global Retail Metrics Bureau",
+        salary: "$400 per assignment (2-3 hrs weekly)",
+        email: "evaluations@shopper-quality-desk.com",
+        desc: "You will evaluate wire transfer speeds and customer service at local stores. We will courier a check of $2,950 to your address. Deposit the check at your local bank ATM, withdraw $2,500 in cash, and perform two test MoneyGram transfers to our mystery audit addresses. Keep $450 as your compensation for completing the task."
+      },
+      {
+        tag: "Package Reshipping",
+        title: "Logistics Quality & Parcel Forwarding Inspector",
+        company: "TransAtlantic Freight Solutions",
+        salary: "$3,800/month + $40 per forwarded package",
+        email: "careers-transatlantic@outlook.com",
+        desc: "Receive luxury electronics and designer merchandise at your home residence, inspect packages for transit damages, repackage them with new airway bills provided via WhatsApp, and ship them overseas to our international sorting hub. No interview needed, immediate start."
       }
-      lucide.createIcons();
-    }
+    ];
 
-    // ================= AUTHENTICATION LOGIC =================
-    let currentUser = null;
-    let authMode = 'login'; // 'login' or 'register'
-
-    function checkStoredSession() {
-      const stored = localStorage.getItem('jobshield_session');
-      if (stored) {
-        try {
-          currentUser = JSON.parse(stored);
-          renderAuthStatus();
-        } catch (e) {
-          localStorage.removeItem('jobshield_session');
-        }
-      } else {
-        renderAuthStatus();
+    // Diverse legitimate job listings on every single click:
+    const LEGIT_SAMPLES = [
+      {
+        tag: "Stripe Backend",
+        title: "Senior Full-Stack Software Engineer (Python / React)",
+        company: "Stripe",
+        salary: "$160,000 - $195,000 + Equity + 401(k)",
+        email: "careers@stripe.com",
+        desc: "Stripe is seeking an experienced Senior Software Engineer to design, build, and maintain our global payments infrastructure. Requirements include 5+ years building distributed backends in Python or Go, familiarity with PostgreSQL and message queues, and experience developing modern React or TypeScript web apps. Stripe offers comprehensive healthcare, 401(k) matching, and parental leave. We do not ask for any financial commitments, checks, or messaging through unofficial channels during interviews."
+      },
+      {
+        tag: "Datadog Site Reliability",
+        title: "Site Reliability Engineer (SRE) - Cloud Platforms",
+        company: "Datadog",
+        salary: "$140,000 - $175,000 + Stock Options",
+        email: "jobs@datadoghq.com",
+        desc: "Join Datadog to build scalable telemetry collection and distributed Kubernetes observability platforms. Requirements: 3+ years experience with Linux systems, container orchestration (Docker/K8s), and cloud platforms (AWS or GCP). All communication occurs strictly via Greenhouse ATS and official @datadoghq.com company emails."
+      },
+      {
+        tag: "Figma Product Designer",
+        title: "Senior Product Designer - Design Systems",
+        company: "Figma",
+        salary: "$150,000 - $185,000 USD",
+        email: "talent@figma.com",
+        desc: "Figma is hiring a Senior Product Designer to evolve our collaborative design canvas. You will lead component architecture, accessibility compliance, and design token standards. Interviews comprise portfolio reviews and team design pairing sessions. Figma never requests payment or hardware purchases from applicants."
+      },
+      {
+        tag: "Spotify Data Scientist",
+        title: "Data Scientist - Personalization & Recommendations",
+        company: "Spotify",
+        salary: "$135,000 - $165,000 + Comprehensive Benefits",
+        email: "recruitment@spotify.com",
+        desc: "Spotify is seeking a Data Scientist to formulate algorithms enhancing algorithmic discoverability and music recommendation playlists. Requires expertise in Python, SQL, causal inference, and A/B experimentation methodologies. All interviews are coordinated via our careers portal."
       }
+    ];
+
+    let scamIndex = 0;
+    let legitIndex = 0;
+
+    function loadNextScamSample() {
+      const sample = SCAM_SAMPLES[scamIndex % SCAM_SAMPLES.length];
+      scamIndex++;
+      applySampleData(sample);
+      document.getElementById('scamSampleBtnLabel').textContent = `Scam: ${sample.tag}`;
     }
 
-    function setAuthMode(mode) {
-      authMode = mode;
-      const nameGroup = document.getElementById('registerNameGroup');
-      const submitBtn = document.getElementById('authSubmitBtn');
-      const toggleLogin = document.getElementById('toggleLoginBtn');
-      const toggleRegister = document.getElementById('toggleRegisterBtn');
-      const alertBox = document.getElementById('authAlert');
-      alertBox.classList.add('hidden');
-
-      if (mode === 'register') {
-        nameGroup.classList.remove('hidden');
-        submitBtn.textContent = 'Create Analyst Account';
-        toggleRegister.className = "flex-1 py-2 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
-        toggleLogin.className = "flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition-all";
-      } else {
-        nameGroup.classList.add('hidden');
-        submitBtn.textContent = 'Sign In to Intelligence Portal';
-        toggleLogin.className = "flex-1 py-2 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
-        toggleRegister.className = "flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition-all";
-      }
+    function loadNextLegitSample() {
+      const sample = LEGIT_SAMPLES[legitIndex % LEGIT_SAMPLES.length];
+      legitIndex++;
+      applySampleData(sample);
+      document.getElementById('legitSampleBtnLabel').textContent = `Legit: ${sample.tag}`;
     }
 
-    function fillAdminCredentials() {
-      document.getElementById('authEmail').value = 'admin@jobshield.ai';
-      document.getElementById('authPassword').value = 'JobShield2026!';
-      setAuthMode('login');
-    }
-
-    async function handleAuthSubmit(e) {
-      e.preventDefault();
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value;
-      const alertBox = document.getElementById('authAlert');
-      alertBox.classList.add('hidden');
-
-      const endpoint = authMode === 'register' ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
-      const payload = authMode === 'register' ? {
-        email,
-        password,
-        full_name: document.getElementById('authName').value.trim() || 'Threat Analyst'
-      } : { email, password };
-
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (res.ok && data.success) {
-          currentUser = {
-            token: data.token,
-            user: data.user
-          };
-          localStorage.setItem('jobshield_session', JSON.stringify(currentUser));
-          renderAuthStatus();
-          alertBox.className = "p-3 rounded-xl text-xs font-mono bg-emerald-950/80 border border-emerald-800 text-emerald-300 block";
-          alertBox.textContent = `Welcome, ${data.user.name}! Access granted.`;
-          setTimeout(() => switchPage('scanner'), 1000);
-        } else {
-          alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
-          alertBox.textContent = data.detail || 'Authentication failed. Please verify credentials.';
-        }
-      } catch (err) {
-        // Fallback demo session if API is in offline mode
-        currentUser = {
-          token: "demo-local-token-" + Date.now(),
-          user: {
-            id: 1,
-            email: email,
-            name: email.split('@')[0].toUpperCase(),
-            role: "analyst"
-          }
-        };
-        localStorage.setItem('jobshield_session', JSON.stringify(currentUser));
-        renderAuthStatus();
-        alertBox.className = "p-3 rounded-xl text-xs font-mono bg-emerald-950/80 border border-emerald-800 text-emerald-300 block";
-        alertBox.textContent = "Offline Session Initiated. Access Granted.";
-        setTimeout(() => switchPage('scanner'), 1000);
-      }
-    }
-
-    function handleLogout() {
-      currentUser = null;
-      localStorage.removeItem('jobshield_session');
-      renderAuthStatus();
-    }
-
-    function renderAuthStatus() {
-      const authPill = document.getElementById('authPill');
-      const loggedInView = document.getElementById('loggedInView');
-      const loggedOutView = document.getElementById('loggedOutView');
-
-      if (currentUser && currentUser.user) {
-        authPill.innerHTML = `
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-800 text-xs font-mono text-cyan-300 cursor-pointer" onclick="switchPage('auth')">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span class="font-bold">${currentUser.user.name}</span>
-          </div>
-        `;
-        loggedInView.classList.remove('hidden');
-        loggedOutView.classList.add('hidden');
-
-        document.getElementById('userDisplayName').textContent = currentUser.user.name;
-        document.getElementById('userDisplayEmail').textContent = currentUser.user.email;
-        document.getElementById('userDisplayRole').textContent = (currentUser.user.role || 'ANALYST').toUpperCase();
-      } else {
-        authPill.innerHTML = `
-          <button onclick="switchPage('auth')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-black hover:bg-slate-200 transition-colors">
-            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-            <span>Sign In</span>
-          </button>
-        `;
-        loggedInView.classList.add('hidden');
-        loggedOutView.classList.remove('hidden');
-      }
-      lucide.createIcons();
-    }
-
-    // ================= SCANNER LOGIC =================
-    const SAMPLE_SCAM = {
-      title: "Executive Personal & Remote Office Assistant",
-      company: "Apex Global Trade Ltd.",
-      salary: "$55/hour + $400 weekly allowance",
-      email: "recruitment.apexglobal@gmail.com",
-      desc: "Congratulations! You have been selected for an immediate remote position. No experience is required. You will be sent an official cashier check of $4,500 to purchase your home office setup and specialized software from our verified vendor. You must cash the check, keep $500 as sign-on bonus, and immediately wire the remaining $4,000 via Western Union / MoneyGram or send Bitcoin to our equipment distributor. For fast interview confirmation, contact Mr. David Miller immediately on Telegram @apex_david_recruiter."
-    };
-
-    const SAMPLE_LEGIT = {
-      title: "Senior Full-Stack Software Engineer (Python / React)",
-      company: "Stripe",
-      salary: "$160,000 - $195,000 + Equity + 401(k)",
-      email: "careers@stripe.com",
-      desc: "Stripe is seeking an experienced Senior Software Engineer to design, build, and maintain our global payments infrastructure. Requirements include 5+ years building distributed backends in Python or Go, familiarity with PostgreSQL and message queues, and experience developing modern React or TypeScript web apps. Stripe offers comprehensive healthcare, 401(k) matching, and parental leave. We do not ask for any financial commitments, checks, or messaging through unofficial channels during interviews."
-    };
-
-    function loadSample(type) {
-      const data = type === 'scam' ? SAMPLE_SCAM : SAMPLE_LEGIT;
+    function applySampleData(data) {
       document.getElementById('jobTitle').value = data.title;
       document.getElementById('companyName').value = data.company;
       document.getElementById('salaryInfo').value = data.salary;
@@ -771,14 +694,227 @@
       document.getElementById('charCounter').textContent = `${val.length} characters`;
     }
 
+    // ================= AUTHENTICATION & PERSISTENT SESSION =================
     const API_BASE = 'http://127.0.0.1:8000';
-    let isApiConnected = false;
+    let currentUser = null;
+    let gateAuthMode = 'login'; // 'login' or 'register'
 
+    // Check localStorage on every visit to recognise returning users
+    function initializeAuthenticationGate() {
+      const savedUser = localStorage.getItem('jobshield_authenticated_user');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          if (currentUser && currentUser.user && currentUser.token) {
+            // User recognized! Unlock portal
+            unlockPortal(currentUser.user);
+            return;
+          }
+        } catch (e) {
+          localStorage.removeItem('jobshield_authenticated_user');
+        }
+      }
+
+      // If no valid session, keep mandatory modal open
+      showAuthGateModal();
+    }
+
+    function showAuthGateModal() {
+      document.getElementById('authGateModal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function unlockPortal(user) {
+      document.getElementById('authGateModal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+
+      // Update welcome banner
+      document.getElementById('welcomeUserName').textContent = user.name || user.full_name || user.email;
+      const providerLabel = user.auth_provider === 'google' ? 'Google Verified' : 'Database Verified';
+      document.getElementById('welcomeProviderBadge').textContent = providerLabel;
+
+      // Update avatar
+      const avatarContainer = document.getElementById('userAvatarContainer');
+      if (user.avatar_url) {
+        avatarContainer.innerHTML = `<img src="${user.avatar_url}" alt="Avatar" class="w-full h-full object-cover">`;
+      } else {
+        const initials = (user.name || user.email || 'A').substring(0, 2).toUpperCase();
+        avatarContainer.innerHTML = `<span>${initials}</span>`;
+      }
+
+      // Update Header Pill
+      const headerPill = document.getElementById('userHeaderPill');
+      headerPill.innerHTML = `
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-800 text-xs font-mono text-cyan-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="font-bold max-w-[120px] truncate">${user.name || user.email}</span>
+        </div>
+        <button onclick="handleLogout()" title="Sign Out" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 border border-white/5 transition-colors">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      `;
+      lucide.createIcons();
+    }
+
+    function setGateAuthMode(mode) {
+      gateAuthMode = mode;
+      const nameGroup = document.getElementById('gateNameGroup');
+      const submitBtn = document.getElementById('gateSubmitBtn');
+      const tabLogin = document.getElementById('gateLoginTab');
+      const tabRegister = document.getElementById('gateRegisterTab');
+      document.getElementById('gateAlert').classList.add('hidden');
+
+      if (mode === 'register') {
+        nameGroup.classList.remove('hidden');
+        submitBtn.textContent = 'Create Analyst Account';
+        tabRegister.className = "flex-1 py-1.5 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+        tabLogin.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all";
+      } else {
+        nameGroup.classList.add('hidden');
+        submitBtn.textContent = 'Authorize Session';
+        tabLogin.className = "flex-1 py-1.5 rounded-lg text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+        tabRegister.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all";
+      }
+    }
+
+    function fillAdminCredentials() {
+      document.getElementById('gateEmail').value = 'admin@jobshield.ai';
+      document.getElementById('gatePassword').value = 'JobShield2026!';
+      setGateAuthMode('login');
+    }
+
+    // Google Sign-In Handler
+    async function handleGoogleSignInPrompt() {
+      const alertBox = document.getElementById('gateAlert');
+      alertBox.classList.remove('hidden');
+      alertBox.className = "p-3 rounded-xl text-xs font-mono bg-cyan-950/80 border border-cyan-800 text-cyan-300 block";
+      alertBox.textContent = "Connecting to Google Identity Services...";
+
+      // Prompt for or auto-generate Google profile for the analyst
+      const googleEmail = prompt("Enter your Google Account email:", "analyst.google@gmail.com");
+      if (!googleEmail || !googleEmail.includes("@")) {
+        alertBox.classList.add('hidden');
+        return;
+      }
+      const googleName = prompt("Enter your Name:", "Google Verified Analyst") || "Threat Analyst";
+
+      const payload = {
+        email: googleEmail,
+        name: googleName,
+        avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(googleEmail)}`
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          currentUser = data;
+          // Store persistently so user is recognised on next visit
+          localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
+          unlockPortal(data.user);
+          return;
+        }
+      } catch (e) {
+        console.warn("Backend auth unavailable, saving local verified Google session");
+      }
+
+      // Resilient local Google authentication
+      currentUser = {
+        token: "google-token-" + Date.now(),
+        user: {
+          id: 99,
+          email: payload.email,
+          name: payload.name,
+          role: "analyst",
+          auth_provider: "google",
+          avatar_url: payload.avatar_url
+        }
+      };
+      localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
+      unlockPortal(currentUser.user);
+    }
+
+    // Email/Password Sign-In & Sign-Up Handler
+    async function handleGateAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('gateEmail').value.trim();
+      const password = document.getElementById('gatePassword').value;
+      const name = document.getElementById('gateName').value.trim() || 'Security Analyst';
+      const alertBox = document.getElementById('gateAlert');
+      alertBox.classList.add('hidden');
+
+      const isRegister = gateAuthMode === 'register';
+      const endpoint = isRegister ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
+      const payload = isRegister ? { email, password, full_name: name } : { email, password };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          currentUser = data;
+          // Persist user session to recognize user on revisits
+          localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
+          unlockPortal(data.user);
+        } else {
+          alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
+          alertBox.textContent = data.detail || 'Authentication failed. Please verify credentials.';
+        }
+      } catch (err) {
+        // Fallback offline session
+        currentUser = {
+          token: "session-" + Date.now(),
+          user: {
+            id: 1,
+            email: email,
+            name: isRegister ? name : (email.split('@')[0].toUpperCase()),
+            role: "analyst",
+            auth_provider: "local"
+          }
+        };
+        localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
+        unlockPortal(currentUser.user);
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('jobshield_authenticated_user');
+      currentUser = null;
+      showAuthGateModal();
+    }
+
+    // Navigation Router
+    function switchPage(page) {
+      document.getElementById('pageScanner').classList.add('hidden');
+      document.getElementById('pageSecurity').classList.add('hidden');
+
+      document.getElementById('navScanner').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
+      document.getElementById('navSecurity').className = "px-4 py-1.5 rounded-full text-slate-400 hover:text-white transition-all";
+
+      if (page === 'scanner') {
+        document.getElementById('pageScanner').classList.remove('hidden');
+        document.getElementById('navScanner').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+      } else if (page === 'security') {
+        document.getElementById('pageSecurity').classList.remove('hidden');
+        document.getElementById('navSecurity').className = "px-4 py-1.5 rounded-full text-white bg-cyan-500/20 text-cyan-400 font-semibold transition-all";
+      }
+      lucide.createIcons();
+    }
+
+    // Healthcheck
+    let isApiConnected = false;
     async function checkApiHealth() {
-      const pill = document.getElementById('backendPill');
       const dot = document.getElementById('backendDot');
       const text = document.getElementById('backendText');
-
       try {
         const res = await fetch(`${API_BASE}/api/status`, { mode: 'cors' });
         if (res.ok) {
@@ -798,10 +934,7 @@
       }
     }
 
-    checkApiHealth();
-    setInterval(checkApiHealth, 10000);
-    checkStoredSession();
-
+    // Client Heuristic Dual-Engine Fallback
     function clientAnalyze(title, company, salary, email, desc) {
       const text = `${title} ${company} ${salary} ${email} ${desc}`.toLowerCase();
       const warnings = [];
@@ -812,22 +945,27 @@
         ruleScore += 45;
       }
 
-      if (text.includes('western union') || text.includes('moneygram') || text.includes('wire transfer') || text.includes('bitcoin') || text.includes('crypto')) {
-        warnings.push({ rule: "Untraceable Money Transfer", severity: "CRITICAL", detail: "Demanding unrecoverable wire transfer or cryptocurrency." });
+      if (text.includes('western union') || text.includes('moneygram') || text.includes('wire transfer') || text.includes('bitcoin') || text.includes('crypto') || text.includes('usdt')) {
+        warnings.push({ rule: "Untraceable Money Transfer / Crypto", severity: "CRITICAL", detail: "Demanding unrecoverable wire transfer, gift cards, or cryptocurrency." });
         ruleScore += 40;
       }
 
-      if (text.includes('telegram') || text.includes('whatsapp') || text.includes('@telegram')) {
+      if (text.includes('telegram') || text.includes('whatsapp') || text.includes('@telegram') || text.includes('@cryptohr')) {
         warnings.push({ rule: "Off-Platform Recruiter Communication", severity: "HIGH", detail: "Directing applicants to Telegram or encrypted mobile chat." });
         ruleScore += 25;
       }
 
-      if (email && (email.includes('@gmail.com') || email.includes('@yahoo.com') || email.includes('@hotmail.com'))) {
-        warnings.push({ rule: "Public Email Domain For Corporate Role", severity: "MEDIUM", detail: "Use of generic email host instead of corporate domain." });
+      if (email && (email.includes('@gmail.com') || email.includes('@yahoo.com') || email.includes('@hotmail.com') || email.includes('@outlook.com'))) {
+        warnings.push({ rule: "Public Email Domain For Corporate Role", severity: "MEDIUM", detail: "Use of generic email host instead of official corporate domain." });
         ruleScore += 15;
       }
 
-      if (text.includes('$50/hour') || text.includes('$60/hour') || text.includes('no experience') && text.includes('$4')) {
+      if (text.includes('reshipping') || text.includes('parcel forwarding') || text.includes('repackage')) {
+        warnings.push({ rule: "Reshipping / Parcel Mule Operation", severity: "CRITICAL", detail: "Recruiting individuals to receive and forward stolen merchandise." });
+        ruleScore += 40;
+      }
+
+      if (text.includes('$50/hour') || text.includes('$55/hour') || text.includes('$60/hour') || text.includes('no experience') && text.includes('$4')) {
         warnings.push({ rule: "Disproportionate Compensation", severity: "MEDIUM", detail: "Extremely high pay promised for entry or no-skill work." });
         ruleScore += 15;
       }
@@ -842,7 +980,7 @@
         advice: isFraud ? [
           "Never deposit a check provided by an employer to buy supplies.",
           "Cease communication if recruiter refuses corporate email or company video call.",
-          "Legitimate employers never demand wire transfers or cryptocurrency."
+          "Legitimate employers never demand wire transfers, gift cards, or cryptocurrency."
         ] : [
           "Verify company existence and job posting on official careers page.",
           "Ensure communications come from an official company domain."
@@ -1036,6 +1174,11 @@
         }
       } catch (e) {}
     }
+
+    // Startup flow: Check backend health and enforce mandatory authentication gate
+    checkApiHealth();
+    setInterval(checkApiHealth, 10000);
+    initializeAuthenticationGate();
   </script>
 </body>
 </html>

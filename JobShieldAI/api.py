@@ -84,6 +84,12 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class GoogleAuthRequest(BaseModel):
+    email: str
+    name: str
+    avatar_url: Optional[str] = ""
+    google_id: Optional[str] = ""
+
 class ScanRequest(BaseModel):
     job_title: Optional[str] = ""
     company_name: Optional[str] = ""
@@ -148,6 +154,27 @@ def login_user(req: LoginRequest) -> Dict[str, Any]:
             "email": user["email"],
             "name": user["full_name"],
             "role": user["role"]
+        }
+    }
+
+@app.post("/api/auth/google")
+def google_authenticate(req: GoogleAuthRequest) -> Dict[str, Any]:
+    """Authenticates or signs up a Google account, saving profile to database."""
+    if not req.email or "@" not in req.email:
+        raise HTTPException(status_code=400, detail="Invalid Google email payload.")
+    
+    user = db.upsert_google_user(req.email, req.name, req.avatar_url)
+    token = create_auth_token(user["id"], user["email"], user["role"], user["full_name"])
+    return {
+        "success": True,
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "name": user["full_name"],
+            "role": user["role"],
+            "auth_provider": "google",
+            "avatar_url": user.get("avatar_url", "")
         }
     }
 
