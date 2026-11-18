@@ -129,7 +129,7 @@
 
       <!-- Google Single Sign-On Button -->
       <div>
-        <button type="button" onclick="handleGoogleSignInPrompt()" class="w-full py-3 px-4 rounded-xl font-medium text-xs bg-slate-900/90 hover:bg-slate-800 border border-white/10 hover:border-white/25 text-white flex items-center justify-center gap-3 transition-all transform hover:-translate-y-0.5 shadow-md">
+        <button type="button" onclick="openGoogleAuthModal()" class="w-full py-3 px-4 rounded-xl font-medium text-xs bg-slate-900/90 hover:bg-slate-800 border border-white/10 hover:border-white/25 text-white flex items-center justify-center gap-3 transition-all transform hover:-translate-y-0.5 shadow-md">
           <!-- Google Icon SVG -->
           <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -139,6 +139,35 @@
           </svg>
           <span>Continue with Google</span>
         </button>
+      </div>
+
+      <!-- In-Page Google Credential Entry Box (Hidden by default) -->
+      <div id="googleAuthBox" class="hidden p-4 rounded-2xl bg-slate-900/90 border border-cyan-500/30 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-white/10">
+          <div class="flex items-center gap-2 text-xs font-semibold text-white">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Google Account Sign-In</span>
+          </div>
+          <button type="button" onclick="closeGoogleAuthBox()" class="text-xs text-slate-400 hover:text-white">✕</button>
+        </div>
+        <form onsubmit="handleGoogleFormSubmit(event)" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">YOUR GOOGLE EMAIL</label>
+            <input type="email" id="googleCustomEmail" required placeholder="your.name@gmail.com" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          </div>
+          <div>
+            <label class="block text-[11px] font-mono text-slate-300 mb-1">YOUR NAME</label>
+            <input type="text" id="googleCustomName" required placeholder="Your Full Name" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-sans">
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase bg-white hover:bg-slate-200 text-black shadow transition-all">
+            Verify & Continue
+          </button>
+        </form>
       </div>
 
       <div class="relative flex items-center justify-center">
@@ -165,12 +194,12 @@
 
         <div>
           <label class="block text-[11px] font-mono text-slate-300 mb-1">EMAIL ADDRESS</label>
-          <input type="email" id="gateEmail" required placeholder="analyst@jobshield.ai" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          <input type="email" id="gateEmail" required placeholder="your.name@company.com" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
         </div>
 
         <div>
           <label class="block text-[11px] font-mono text-slate-300 mb-1">PASSWORD</label>
-          <input type="password" id="gatePassword" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
+          <input type="password" id="gatePassword" required placeholder="Enter password" class="w-full px-3.5 py-2.5 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
         </div>
 
         <button type="submit" id="gateSubmitBtn" class="w-full py-3 rounded-xl font-semibold text-xs tracking-wider uppercase bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black shadow-lg shadow-cyan-500/25 transition-all">
@@ -180,9 +209,9 @@
 
       <!-- Quick Demo Shortcut -->
       <div class="pt-2 border-t border-white/5 text-center space-y-1">
-        <p class="text-[11px] text-slate-500">Fast Demo Account:</p>
+        <p class="text-[11px] text-slate-500">Need a test login? (Click to prefill admin):</p>
         <button type="button" onclick="fillAdminCredentials()" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 underline underline-offset-4 decoration-cyan-500/30">
-          admin@jobshield.ai / JobShield2026!
+          admin@jobshield.ai
         </button>
       </div>
 
@@ -783,24 +812,36 @@
       setGateAuthMode('login');
     }
 
-    // Google Sign-In Handler
-    async function handleGoogleSignInPrompt() {
+    function openGoogleAuthModal() {
+      const box = document.getElementById('googleAuthBox');
+      box.classList.remove('hidden');
+      document.getElementById('googleCustomEmail').value = '';
+      document.getElementById('googleCustomName').value = '';
+      document.getElementById('googleCustomEmail').focus();
+    }
+
+    function closeGoogleAuthBox() {
+      document.getElementById('googleAuthBox').classList.add('hidden');
+    }
+
+    async function handleGoogleFormSubmit(e) {
+      e.preventDefault();
+      const googleEmail = document.getElementById('googleCustomEmail').value.trim();
+      const googleName = document.getElementById('googleCustomName').value.trim();
+
+      if (!googleEmail || !googleEmail.includes("@")) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
       const alertBox = document.getElementById('gateAlert');
       alertBox.classList.remove('hidden');
       alertBox.className = "p-3 rounded-xl text-xs font-mono bg-cyan-950/80 border border-cyan-800 text-cyan-300 block";
-      alertBox.textContent = "Connecting to Google Identity Services...";
-
-      // Prompt for or auto-generate Google profile for the analyst
-      const googleEmail = prompt("Enter your Google Account email:", "analyst.google@gmail.com");
-      if (!googleEmail || !googleEmail.includes("@")) {
-        alertBox.classList.add('hidden');
-        return;
-      }
-      const googleName = prompt("Enter your Name:", "Google Verified Analyst") || "Threat Analyst";
+      alertBox.textContent = "Authenticating with Google Services...";
 
       const payload = {
         email: googleEmail,
-        name: googleName,
+        name: googleName || googleEmail.split('@')[0],
         avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(googleEmail)}`
       };
 
@@ -814,16 +855,14 @@
         if (res.ok) {
           const data = await res.json();
           currentUser = data;
-          // Store persistently so user is recognised on next visit
           localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
           unlockPortal(data.user);
           return;
         }
       } catch (e) {
-        console.warn("Backend auth unavailable, saving local verified Google session");
+        console.warn("Backend auth offline, saving local verified Google session");
       }
 
-      // Resilient local Google authentication
       currentUser = {
         token: "google-token-" + Date.now(),
         user: {
@@ -833,6 +872,11 @@
           role: "analyst",
           auth_provider: "google",
           avatar_url: payload.avatar_url
+        }
+      };
+      localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
+      unlockPortal(currentUser.user);
+    }
         }
       };
       localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
