@@ -137,6 +137,21 @@ export default function App({ googleClientId = '' }) {
     fetchAllData();
   };
 
+  const handleSignOut = () => {
+    try {
+      localStorage.removeItem('jobshield_session');
+    } catch (error) {
+      console.warn('Unable to remove saved session during sign out:', error);
+    }
+
+    setSession(null);
+    setCurrentScan(null);
+    setHistory([]);
+    setStats(null);
+    setSystemStatus(null);
+    setActiveTab('dashboard');
+  };
+
   if (checkingSession) {
     return <div className="min-h-screen bg-[#0B0F19] text-slate-400 flex items-center justify-center">Verifying session...</div>;
   }
@@ -158,6 +173,7 @@ export default function App({ googleClientId = '' }) {
         setActiveTab={setActiveTab}
         systemStatus={systemStatus}
         user={session.user}
+        onSignOut={handleSignOut}
       />
 
       {/* Main Content Viewport */}

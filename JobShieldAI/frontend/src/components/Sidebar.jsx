@@ -9,14 +9,16 @@ import {
   AlertCircle, 
   Activity,
   ChevronRight,
-  UserRound
+  UserRound,
+  LogOut
 } from 'lucide-react';
 
 export default function Sidebar({ 
   activeTab, 
   setActiveTab, 
   systemStatus,
-  user
+  user,
+  onSignOut
 }) {
   const navItems = [
     { id: 'dashboard', label: 'Home Dashboard', icon: Activity, desc: 'Telemetry & Metrics' },
@@ -143,6 +145,14 @@ export default function Sidebar({
             <span className="text-slate-500">{authMethod}</span>
             <span className="text-blue-300 uppercase">{displayRole}</span>
           </div>
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="mt-3 w-full flex items-center justify-center gap-2 rounded-lg border border-white/[0.06] bg-black/20 py-2 text-xs font-medium text-slate-400 transition-colors hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-300"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sign out
+          </button>
         </section>
 
         {/* System Status telemetry card at bottom */}
