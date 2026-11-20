@@ -157,6 +157,7 @@ export default function App({ googleClientId = '' }) {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         systemStatus={systemStatus}
+        user={session.user}
       />
 
       {/* Main Content Viewport */}
