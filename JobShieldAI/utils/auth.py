@@ -12,8 +12,8 @@ import json
 import time
 from typing import Optional, Dict, Any
 
-# Dynamic server secret key (persisted across reboots or generated from machine seed)
-SECRET_KEY = os.environ.get("JOBSHIELD_SECRET_KEY", "jobshield-ai-cyber-secret-token-sign-key-2026")
+# Use an explicit environment secret. Generate an ephemeral secret only for unconfigured local runs.
+SECRET_KEY = os.environ.get("JOBSHIELD_SECRET_KEY") or base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
 TOKEN_EXPIRY_SECONDS = 86400 * 7  # 7-day session validity
 
 def hash_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: jobshield-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./JobShieldAI/Dockerfile
+    dockerContext: ./JobShieldAI
+    healthCheckPath: /api/status
+    envVars:
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: JOBSHIELD_SECRET_KEY
+        generateValue: true

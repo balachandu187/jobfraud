@@ -86,6 +86,27 @@ streamlit run app.py
 ```
 The application will open automatically in your browser at `http://localhost:8501`.
 
+### Deploy the React + FastAPI Preview to Render
+
+The repository includes a Render Blueprint and a Dockerfile that build and serve
+the React frontend together with FastAPI. To deploy:
+
+1. Push the repository to GitHub.
+2. In Render, choose **New → Blueprint** and select this repository. Render reads
+   the root `render.yaml` and creates the `jobshield-ai` web service.
+3. In the service's environment settings, set `GOOGLE_CLIENT_ID` to your Google
+   OAuth **Web application** client ID. Do not add a Google client secret; this
+   sign-in flow verifies ID tokens on the backend and does not use a client secret.
+4. Wait for the service health check at `/api/status` to pass, then open the
+   `onrender.com` URL shown in the Render dashboard.
+5. In Google Cloud Console, add that URL's origin (for example,
+   `https://jobshield-ai.onrender.com`) to **Authorized JavaScript origins**.
+   The popup flow does not need an Authorized redirect URI.
+
+The Blueprint generates `JOBSHIELD_SECRET_KEY` for the service. The free Render
+plan may sleep when idle, and its filesystem is temporary; SQLite records are
+not guaranteed to persist across restarts or redeployments.
+
 ---
 
 ## 3. Optional Local Ollama AI Integration

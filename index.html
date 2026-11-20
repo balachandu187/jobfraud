@@ -14,6 +14,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Official Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Canvas Confetti for Safe Scans -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
@@ -141,38 +143,10 @@
         </button>
       </div>
 
-      <!-- In-Page Google Credential Entry Box -->
-      <div id="googleAuthBox" style="display: none;" class="p-4 rounded-2xl bg-slate-900/95 border border-cyan-500/40 space-y-3">
-        <div class="flex items-center justify-between pb-2 border-b border-white/10">
-          <div class="flex items-center gap-2 text-xs font-semibold text-white">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            <span>Google Account Sign-In</span>
-          </div>
-          <button type="button" onclick="closeGoogleAuthBox()" class="text-xs text-slate-400 hover:text-white px-1">✕</button>
-        </div>
-        <form onsubmit="handleGoogleFormSubmit(event)" class="space-y-3">
-          <div>
-            <label class="block text-[11px] font-mono text-slate-300 mb-1">YOUR GOOGLE EMAIL</label>
-            <input type="email" id="googleCustomEmail" required placeholder="your.name@gmail.com" class="w-full px-3.5 py-2 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
-          </div>
-          <div>
-            <label class="block text-[11px] font-mono text-slate-300 mb-1">YOUR NAME</label>
-            <input type="text" id="googleCustomName" required placeholder="Your Full Name" class="w-full px-3.5 py-2 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-sans">
-          </div>
-          <div>
-            <label class="block text-[11px] font-mono text-slate-300 mb-1">GOOGLE PASSWORD</label>
-            <input type="password" id="googleCustomPassword" required placeholder="Enter your password" class="w-full px-3.5 py-2 rounded-xl text-sm glass-input text-white placeholder-slate-500 focus:outline-none font-mono">
-          </div>
-          <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase bg-white hover:bg-slate-200 text-black shadow transition-all">
-            Verify & Continue
-          </button>
-        </form>
+      <div id="googleSetupBanner" class="hidden p-3 rounded-xl text-xs font-mono bg-amber-950/70 border border-amber-700 text-amber-300">
+        Google sign-in is not configured. Set <strong>GOOGLE_CLIENT_ID</strong> in <strong>JobShieldAI/.env</strong> locally or in the deployed service environment.
       </div>
+      <div id="googleSignInContainer" class="hidden flex justify-center"></div>
 
       <div class="relative flex items-center justify-center">
         <div class="border-t border-white/10 w-full"></div>
@@ -258,13 +232,6 @@
         </div>
       </div>
 
-      <!-- Quick Demo Shortcut -->
-      <div class="pt-2 border-t border-white/5 text-center space-y-1">
-        <p class="text-[11px] text-slate-500">Need a test login? (Click to prefill admin):</p>
-        <button type="button" onclick="fillAdminCredentials()" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 underline underline-offset-4 decoration-cyan-500/30">
-          admin@jobshield.ai
-        </button>
-      </div>
 
     </div>
   </div>
@@ -780,22 +747,28 @@
     let gateAuthMode = 'login'; // 'login' or 'register'
 
     // Check localStorage on every visit to recognise returning users
-    function initializeAuthenticationGate() {
+    async function initializeAuthenticationGate() {
       const savedUser = localStorage.getItem('jobshield_authenticated_user');
       if (savedUser) {
         try {
           currentUser = JSON.parse(savedUser);
           if (currentUser && currentUser.user && currentUser.token) {
-            // User recognized! Unlock portal
-            unlockPortal(currentUser.user);
-            return;
+            const response = await fetch(`${API_BASE}/api/auth/me`, {
+              headers: { 'Authorization': `Bearer ${currentUser.token}` }
+            });
+            if (response.ok) {
+              const data = await response.json();
+              unlockPortal(data.user);
+              return;
+            }
           }
         } catch (e) {
-          localStorage.removeItem('jobshield_authenticated_user');
         }
+        localStorage.removeItem('jobshield_authenticated_user');
+        currentUser = null;
       }
 
-      // If no valid session, keep mandatory modal open
+      loadGoogleOAuthConfig();
       showAuthGateModal();
     }
 
@@ -857,43 +830,58 @@
       }
     }
 
-    function fillAdminCredentials() {
-      document.getElementById('gateEmail').value = 'admin@jobshield.ai';
-      document.getElementById('gatePassword').value = 'JobShield2026!';
-      setGateAuthMode('login');
-    }
+    let googleOAuthClientId = '';
 
-    function handleGoogleDirectClick() {
-      const box = document.getElementById('googleAuthBox');
-      if (box.style.display === 'none' || box.classList.contains('hidden')) {
-        box.classList.remove('hidden');
-        box.style.display = 'block';
-        document.getElementById('googleCustomEmail').value = '';
-        document.getElementById('googleCustomName').value = '';
-        document.getElementById('googleBtnText').textContent = 'Hide Google Sign-In';
-        setTimeout(() => document.getElementById('googleCustomEmail').focus(), 50);
-      } else {
-        closeGoogleAuthBox();
+    async function loadGoogleOAuthConfig() {
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/google/config`);
+        if (!response.ok) return;
+        const config = await response.json();
+        googleOAuthClientId = config.client_id || '';
+        if (!config.configured) {
+          document.getElementById('googleSetupBanner').classList.remove('hidden');
+          return;
+        }
+        document.getElementById('googleSetupBanner').classList.add('hidden');
+        initializeGoogleSignIn();
+      } catch (error) {
+        document.getElementById('googleSetupBanner').classList.remove('hidden');
       }
     }
 
-    function closeGoogleAuthBox() {
-      const box = document.getElementById('googleAuthBox');
-      box.style.display = 'none';
-      box.classList.add('hidden');
-      document.getElementById('googleBtnText').textContent = 'Continue with Google';
+    function initializeGoogleSignIn() {
+      if (!window.google || !googleOAuthClientId) return;
+      window.google.accounts.id.initialize({
+        client_id: googleOAuthClientId,
+        callback: handleGoogleCredentialResponse
+      });
+      const container = document.getElementById('googleSignInContainer');
+      container.classList.remove('hidden');
+      window.google.accounts.id.renderButton(container, {
+        theme: 'filled_black',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'pill',
+        width: 320
+      });
     }
 
-    // ================= CLIENT PASSWORD & ACCOUNT REPOSITORY =================
-    // Maintains registered accounts in browser storage so invalid passwords fail with 'Incorrect Password'
+    function handleGoogleDirectClick() {
+      if (!googleOAuthClientId) {
+        document.getElementById('googleSetupBanner').classList.remove('hidden');
+        return;
+      }
+      initializeGoogleSignIn();
+      document.getElementById('googleSignInContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ================= CLIENT ACCOUNT REPOSITORY =================
     function getStoredAccounts() {
       try {
         const accs = localStorage.getItem('jobshield_accounts');
-        return accs ? JSON.parse(accs) : {
-          'admin@jobshield.ai': { password: 'JobShield2026!', name: 'Chief Security Officer', role: 'admin' }
-        };
+        return accs ? JSON.parse(accs) : {};
       } catch (e) {
-        return { 'admin@jobshield.ai': { password: 'JobShield2026!', name: 'Chief Security Officer', role: 'admin' } };
+        return {};
       }
     }
 
@@ -976,104 +964,34 @@
       setGateAuthMode('login');
     }
 
-    async function handleGoogleFormSubmit(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      const emailInput = document.getElementById('googleCustomEmail');
-      const nameInput = document.getElementById('googleCustomName');
-      const passInput = document.getElementById('googleCustomPassword');
+    async function handleGoogleCredentialResponse(response) {
       const alertBox = document.getElementById('gateAlert');
-
-      const googleEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
-      const googleName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : (googleEmail.split('@')[0] || 'Google User');
-      const googlePass = passInput ? passInput.value : '';
-
-      if (!googleEmail || !googleEmail.includes("@")) {
-        alert("Please enter a valid Google email address.");
-        return false;
-      }
-
-      if (!googlePass || googlePass.length < 6) {
-        alert("Please enter your Google password (minimum 6 characters).");
-        return false;
-      }
-
-      // Verify or Register Google account credentials in repository
-      const accs = getStoredAccounts();
-      if (accs[googleEmail]) {
-        if (accs[googleEmail].password !== googlePass) {
-          if (alertBox) {
-            alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
-            alertBox.textContent = "Incorrect password for this Google account. Please enter the correct password or click 'Forgot Password?'.";
-            alertBox.classList.remove('hidden');
-          } else {
-            alert("Incorrect password for this Google account.");
-          }
-          return false;
+      if (!response || !response.credential) {
+        if (alertBox) {
+          alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
+          alertBox.textContent = "Google did not return an identity credential.";
         }
-      } else {
-        // Register Google account
-        accs[googleEmail] = {
-          password: googlePass,
-          name: googleName,
-          role: 'analyst',
-          auth_provider: 'google'
-        };
-        saveStoredAccounts(accs);
-      }
-
-      if (alertBox) {
-        alertBox.classList.remove('hidden');
-        alertBox.className = "p-3 rounded-xl text-xs font-mono bg-cyan-950/80 border border-cyan-800 text-cyan-300 block";
-        alertBox.textContent = "Google Account Authenticated Successfully!";
-      }
-
-      const payload = {
-        email: googleEmail,
-        name: googleName,
-        avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(googleEmail)}`
-      };
-
-      function authorizeGoogleEntry(userData, tokenStr) {
-        currentUser = {
-          token: tokenStr || ("google-token-" + Date.now()),
-          user: userData
-        };
-        try {
-          localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
-        } catch (err) {}
-        unlockPortal(currentUser.user);
+        return;
       }
 
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
-
         const res = await fetch(`${API_BASE}/api/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal
+          body: JSON.stringify({ id_token: response.credential })
         });
-        clearTimeout(timeoutId);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Google authentication failed.');
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.user) {
-            authorizeGoogleEntry(data.user, data.token);
-            return false;
-          }
+        currentUser = { token: data.token, user: data.user };
+        localStorage.setItem('jobshield_authenticated_user', JSON.stringify(currentUser));
+        unlockPortal(data.user);
+      } catch (error) {
+        if (alertBox) {
+          alertBox.className = "p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-800 text-rose-300 block";
+          alertBox.textContent = error.message || "Google authentication failed.";
         }
-      } catch (e) {}
-
-      authorizeGoogleEntry({
-        id: Math.floor(Math.random() * 1000) + 1,
-        email: payload.email,
-        name: payload.name,
-        role: "analyst",
-        auth_provider: "google",
-        avatar_url: payload.avatar_url
-      });
-      return false;
+      }
     }
 
     async function handleGateAuthSubmit(e) {

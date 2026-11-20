@@ -4,9 +4,10 @@ import Dashboard from './components/Dashboard';
 import ScannerWorkspace from './components/ScannerWorkspace';
 import ScanHistory from './components/ScanHistory';
 import Architecture from './components/Architecture';
+import LoginGate from './components/LoginGate';
 import { ShieldAlert, RefreshCw, AlertCircle } from 'lucide-react';
 
-export default function App() {
+export default function App({ googleClientId = '' }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [systemStatus, setSystemStatus] = useState(null);
   const [stats, setStats] = useState(null);
@@ -14,6 +15,23 @@ export default function App() {
   const [currentScan, setCurrentScan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [backendError, setBackendError] = useState(false);
+  const [session, setSession] = useState(() => {
+    try {
+      const saved = localStorage.getItem('jobshield_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.warn('Discarding invalid saved session:', error);
+      return null;
+    }
+  });
+  const [checkingSession, setCheckingSession] = useState(() => {
+    try {
+      const saved = localStorage.getItem('jobshield_session');
+      return saved ? Boolean(JSON.parse(saved)) : false;
+    } catch {
+      return false;
+    }
+  });
 
   // Fetch telemetry and stats from FastAPI
   const fetchAllData = async () => {
@@ -50,7 +68,24 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchAllData();
+    if (!session) {
+      try {
+        localStorage.removeItem('jobshield_session');
+      } catch (error) {
+        console.warn('Unable to remove invalid saved session:', error);
+      }
+      return;
+    }
+
+    fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${session.token}` },
+    }).then(async (response) => {
+      if (!response.ok) throw new Error('Expired session');
+      fetchAllData();
+    }).catch(() => {
+      localStorage.removeItem('jobshield_session');
+      setSession(null);
+    }).finally(() => setCheckingSession(false));
   }, []);
 
   const handleScanComplete = (scanResult) => {
@@ -93,6 +128,27 @@ export default function App() {
     setCurrentScan(formattedScan);
     setActiveTab('scanner');
   };
+
+  const handleAuthenticated = (authData) => {
+    const nextSession = { token: authData.token, user: authData.user };
+    localStorage.setItem('jobshield_session', JSON.stringify(nextSession));
+    setSession(nextSession);
+    setLoading(false);
+    fetchAllData();
+  };
+
+  if (checkingSession) {
+    return <div className="min-h-screen bg-[#0B0F19] text-slate-400 flex items-center justify-center">Verifying session...</div>;
+  }
+
+  if (!session) {
+    return (
+      <LoginGate
+        googleClientId={googleClientId}
+        onAuthenticated={handleAuthenticated}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[#0B0F19] text-[#F8FAFC]">

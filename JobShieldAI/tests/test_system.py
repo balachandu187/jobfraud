@@ -5,6 +5,9 @@ Tests ML inference, rule-based heuristics, risk blending, and SQLite persistence
 
 import os
 import pytest
+from fastapi import HTTPException
+from pydantic import ValidationError
+from api import GoogleAuthRequest, google_authenticate
 from model.predictor import JobPredictor
 from utils.detector import ScamDetector
 from utils.risk_analyzer import RiskAnalyzer
@@ -86,4 +89,16 @@ def test_database_crud(setup_system):
     # Clean up test row
     deleted = db.delete_scan(scan_id)
     assert deleted is True
+
+def test_google_auth_rejects_unverified_profile_payload():
+    with pytest.raises(ValidationError):
+        GoogleAuthRequest(email="person@example.com", name="Not verified by Google")
+
+def test_google_auth_fails_when_client_id_is_missing(monkeypatch):
+    monkeypatch.delenv("GOOGLE_CLIENT_ID", raising=False)
+
+    with pytest.raises(HTTPException) as error:
+        google_authenticate(GoogleAuthRequest(id_token="unverified-token"))
+
+    assert error.value.status_code == 503
 

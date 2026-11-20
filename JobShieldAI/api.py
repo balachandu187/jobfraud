@@ -8,16 +8,20 @@ Serves the modern React SaaS interface and REST API endpoints.
 import os
 import sys
 from typing import Dict, Any, List, Optional
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 # Ensure JobShieldAI directory is in path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
+load_dotenv(os.path.join(current_dir, ".env"))
 
 # Import existing core modules
 from model.predictor import JobPredictor
@@ -50,11 +54,6 @@ detector = ScamDetector()
 analyzer = RiskAnalyzer()
 ollama = OllamaClient()
 
-# Seed default administrator / security officer if no users exist
-if not db.get_user_by_email("admin@jobshield.ai"):
-    pw_hash, salt = hash_password("JobShield2026!")
-    db.create_user("admin@jobshield.ai", pw_hash, salt, "Chief Security Officer", role="admin")
-
 # Security Dependency
 def get_current_user_optional(authorization: Optional[str] = Header(None)) -> Optional[Dict[str, Any]]:
     """Extracts authenticated user from Bearer header if provided."""
@@ -85,10 +84,7 @@ class LoginRequest(BaseModel):
     password: str
 
 class GoogleAuthRequest(BaseModel):
-    email: str
-    name: str
-    avatar_url: Optional[str] = ""
-    google_id: Optional[str] = ""
+    id_token: str = Field(..., min_length=1)
 
 class ScanRequest(BaseModel):
     job_title: Optional[str] = ""
@@ -157,13 +153,44 @@ def login_user(req: LoginRequest) -> Dict[str, Any]:
         }
     }
 
+@app.get("/api/auth/google/config")
+def google_auth_config() -> Dict[str, Any]:
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    return {
+        "configured": bool(client_id),
+        "client_id": client_id,
+        "setup_message": "Create a Google OAuth 2.0 Web client and set GOOGLE_CLIENT_ID in JobShieldAI/.env.",
+    }
+
+
 @app.post("/api/auth/google")
 def google_authenticate(req: GoogleAuthRequest) -> Dict[str, Any]:
-    """Authenticates or signs up a Google account, saving profile to database."""
-    if not req.email or "@" not in req.email:
-        raise HTTPException(status_code=400, detail="Invalid Google email payload.")
-    
-    user = db.upsert_google_user(req.email, req.name, req.avatar_url)
+    """Verifies a Google ID token and creates or logs in the Google user."""
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    if not client_id:
+        raise HTTPException(status_code=503, detail="Google OAuth is not configured.")
+
+    try:
+        claims = id_token.verify_oauth2_token(
+            req.id_token,
+            google_requests.Request(),
+            client_id,
+        )
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired Google ID token.")
+
+    if claims.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+        raise HTTPException(status_code=401, detail="Invalid Google token issuer.")
+    if claims.get("email_verified") is not True:
+        raise HTTPException(status_code=401, detail="Google email is not verified.")
+
+    email = str(claims.get("email", "")).strip().lower()
+    name = str(claims.get("name", "")).strip() or email.split("@")[0]
+    avatar_url = str(claims.get("picture", "")).strip()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Google identity did not include a valid email.")
+
+    user = db.upsert_google_user(email, name, avatar_url)
     token = create_auth_token(user["id"], user["email"], user["role"], user["full_name"])
     return {
         "success": True,
