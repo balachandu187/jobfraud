@@ -37,6 +37,8 @@ export default function ScannerWorkspace({
   const [instructions, setInstructions] = useState('');
   const [skills, setSkills] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [presetSelections, setPresetSelections] = useState({});
+  const [activePreset, setActivePreset] = useState(null);
 
   // Scanning & AI State
   const [isScanning, setIsScanning] = useState(false);
@@ -56,56 +58,120 @@ export default function ScannerWorkspace({
       label: '🚨 Upfront Fee Scam',
       badge: 'High Risk',
       color: 'border-red-500/30 text-red-400 bg-red-500/10',
-      data: {
-        title: 'Work From Home Typist & Data Entry',
-        company: 'FastCareers Online Services',
-        salary: '₹80,000 per month',
-        email: 'careers.recruitmentdesk@gmail.com',
-        instructions: 'Pay ₹2,000 refundable registration fee to confirm your joining. No interview required.',
-        skills: 'Basic typing, MS Word, Internet browsing',
-        description: 'Congratulations! You are selected for an online work-from-home job with an attractive salary of ₹80,000 per month. Direct selection letter issued without any interview. Pay ₹2,000 registration fees to confirm your position today. Telegram contact @FastCareersAdmin.'
-      }
+      examples: [
+        {
+          title: 'Work From Home Typist & Data Entry',
+          company: 'FastCareers Online Services',
+          salary: '₹80,000 per month',
+          email: 'careers.recruitmentdesk@gmail.com',
+          instructions: 'Pay ₹2,000 refundable registration fee to confirm your joining. No interview required.',
+          skills: 'Basic typing, MS Word, Internet browsing',
+          description: 'Congratulations! You are selected for an online work-from-home job with an attractive salary of ₹80,000 per month. Direct selection letter issued without any interview. Pay ₹2,000 registration fees to confirm your position today. Telegram contact @FastCareersAdmin.'
+        },
+        {
+          title: 'Remote Data Entry Associate',
+          company: 'BrightPath Career Services',
+          salary: '₹65,000 per month',
+          email: 'brightpath.hr@yahoo.com',
+          instructions: 'Pay a refundable security deposit of ₹1,500 to activate your employee ID. Contact the recruiter on Telegram.',
+          skills: 'Basic typing and spreadsheet entry',
+          description: 'Immediate hiring for a remote data entry associate. No interview required and guaranteed selection. Pay a refundable security deposit of ₹1,500 today to activate your employee ID and receive your joining letter. Message @BrightPathRecruiter on Telegram.'
+        },
+        {
+          title: 'Junior Office Assistant',
+          company: 'Global Desk Recruitment',
+          salary: '₹5,000 per day',
+          email: 'globaldesk.jobs@gmail.com',
+          instructions: 'Pay a ₹3,000 training fee before receiving your offer letter. Apply within 24 hours on WhatsApp.',
+          skills: 'No experience required',
+          description: '100% guaranteed selection for a junior office assistant role with no interview. Pay a ₹3,000 training fee before joining and receive your offer letter within 2 hours. Limited seats, message our recruiter on WhatsApp now.'
+        }
+      ]
     },
     {
       id: 'genuine_tech',
       label: '🛡️ Genuine Tech Role',
       badge: 'Safe',
       color: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
-      data: {
-        title: 'Senior Software Engineer (Python / FastAPI)',
-        company: 'ABC Technologies Ltd',
-        salary: '₹14,00,000 - ₹18,00,000 per annum',
-        email: 'talent@abctechnologies.com',
-        instructions: 'Apply through company official careers portal. Technical interview and coding assessment required.',
-        skills: 'Python, FastAPI, PostgreSQL, Docker, Git, REST APIs',
-        description: 'Senior Software Engineer position at ABC Technologies Ltd. Candidates should have solid Python, backend API engineering, and distributed systems experience. Applicants will undergo two rounds of technical interviews and credentials verification. Apply through the company official careers portal.'
-      }
+      examples: [
+        {
+          title: 'Senior Software Engineer (Python / FastAPI)',
+          company: 'ABC Technologies Ltd',
+          salary: '₹14,00,000 - ₹18,00,000 per annum',
+          email: 'talent@abctechnologies.com',
+          instructions: 'Apply through company official careers portal. Technical interview and coding assessment required.',
+          skills: 'Python, FastAPI, PostgreSQL, Docker, Git, REST APIs',
+          description: 'Senior Software Engineer position at ABC Technologies Ltd. Candidates should have solid Python, backend API engineering, and distributed systems experience. Applicants will undergo two rounds of technical interviews and credentials verification. Apply through the company official careers portal.'
+        },
+        {
+          title: 'Data Analyst',
+          company: 'Northstar Analytics India',
+          salary: '₹9,00,000 - ₹12,00,000 per annum',
+          email: 'careers@northstaranalytics.in',
+          instructions: 'Submit your application through the company careers site. Shortlisted candidates complete a technical interview and a case exercise.',
+          skills: 'SQL, Python, data visualization, statistics',
+          description: 'Northstar Analytics India is hiring a Data Analyst to support product and operations teams. The role requires experience with SQL, Python, and data visualization. Compensation is based on experience. Apply through the official company careers site; shortlisted candidates will complete a technical interview and a case exercise.'
+        },
+        {
+          title: 'Quality Assurance Engineer',
+          company: 'Greenfield Software Systems',
+          salary: '₹8,00,000 - ₹11,00,000 per annum',
+          email: 'recruitment@greenfieldsoftware.in',
+          instructions: 'Apply on the official careers portal. The selection process includes recruiter screening, a practical assessment, and an interview.',
+          skills: 'Software testing, API testing, SQL, automation basics',
+          description: 'Greenfield Software Systems is seeking a Quality Assurance Engineer to test web applications and APIs. Applicants should have software testing experience and familiarity with SQL. The hiring process includes recruiter screening, a practical assessment, and an interview. Apply through the official careers portal; no payment is required at any stage.'
+        }
+      ]
     },
     {
       id: 'scam_otp',
       label: '⚠️ OTP & Identity Scam',
       badge: 'Critical Risk',
       color: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
-      data: {
-        title: 'Back Office Assistant & Payment Coordinator',
-        company: 'Apex Global Hires',
-        salary: '₹60,000 monthly',
-        email: 'apexhires@yahoo.com',
-        instructions: 'Send Aadhaar card, bank account number, and share verification OTP when prompted.',
-        skills: 'None required, immediate joining',
-        description: 'Immediate hiring! Guaranteed job placement with daily salary. Send your Aadhaar details, bank account information, and share verification OTP to complete appointment letter issuance. Message HR directly on WhatsApp.'
-      }
+      examples: [
+        {
+          title: 'Back Office Assistant & Payment Coordinator',
+          company: 'Apex Global Hires',
+          salary: '₹60,000 monthly',
+          email: 'apexhires@yahoo.com',
+          instructions: 'Send Aadhaar card, bank account number, and share verification OTP when prompted.',
+          skills: 'None required, immediate joining',
+          description: 'Immediate hiring! Guaranteed job placement with daily salary. Send your Aadhaar details, bank account information, and share verification OTP to complete appointment letter issuance. Message HR directly on WhatsApp.'
+        },
+        {
+          title: 'Work From Home Payroll Assistant',
+          company: 'RapidHire Placement Desk',
+          salary: '₹55,000 per month',
+          email: 'rapidhiredesk@gmail.com',
+          instructions: 'Send your PAN card and bank passbook photo. Share the OTP sent to your phone to verify your salary account.',
+          skills: 'No experience required, instant joining',
+          description: 'Urgent hiring for a payroll assistant. No interview is needed. Send your PAN card, bank passbook, and account details to complete onboarding. Our agent will ask for the OTP sent to your phone to verify your salary account. Contact us on WhatsApp.'
+        },
+        {
+          title: 'Online Customer Support Representative',
+          company: 'PrimeWay Careers',
+          salary: '₹4,000 daily',
+          email: 'primewaycareers@yahoo.com',
+          instructions: 'Share your Aadhaar number and one-time password with the recruiter to release your offer letter.',
+          skills: 'Basic communication, immediate joining',
+          description: 'Guaranteed placement as an online customer support representative with daily pay. Send your Aadhaar details and bank account information, then share the one-time password sent to your phone to release your offer letter. Message HR directly on WhatsApp.'
+        }
+      ]
     }
   ];
 
   const handleApplyPreset = (preset) => {
-    setJobTitle(preset.data.title);
-    setCompanyName(preset.data.company);
-    setSalaryInfo(preset.data.salary);
-    setContactEmail(preset.data.email);
-    setInstructions(preset.data.instructions);
-    setSkills(preset.data.skills);
-    setJobDescription(preset.data.description);
+    const exampleIndex = ((presetSelections[preset.id] ?? -1) + 1) % preset.examples.length;
+    const example = preset.examples[exampleIndex];
+    setPresetSelections((current) => ({ ...current, [preset.id]: exampleIndex }));
+    setActivePreset({ id: preset.id, index: exampleIndex });
+    setJobTitle(example.title);
+    setCompanyName(example.company);
+    setSalaryInfo(example.salary);
+    setContactEmail(example.email);
+    setInstructions(example.instructions);
+    setSkills(example.skills);
+    setJobDescription(example.description);
     setErrorMessage('');
   };
 
@@ -117,6 +183,8 @@ export default function ScannerWorkspace({
     setInstructions('');
     setSkills('');
     setJobDescription('');
+    setPresetSelections({});
+    setActivePreset(null);
     setErrorMessage('');
   };
 
@@ -254,15 +322,18 @@ ${dynamicAiText || currentScan.ai_explanation?.text || 'Automated rule verificat
         {/* Live Preset Demo Pills */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-slate-500 font-mono font-medium hidden sm:inline">
-            Load Preset:
+            Load Preset · click again to cycle:
           </span>
           {presets.map((p) => (
             <button
               key={p.id}
               onClick={() => handleApplyPreset(p)}
+              aria-label={`Load next ${p.label} example, ${p.examples.length} examples available`}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 hover:scale-[1.03] active:scale-[0.98] cursor-pointer ${p.color}`}
             >
-              {p.label}
+              {p.label} · {activePreset?.id === p.id
+                ? `${activePreset.index + 1}/${p.examples.length}`
+                : `${p.examples.length} samples`}
             </button>
           ))}
         </div>
