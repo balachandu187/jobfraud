@@ -31,9 +31,10 @@ export default function Sidebar({
   const mlReady = systemStatus?.ml_ready ?? true;
   const ollamaOnline = systemStatus?.ollama_available ?? false;
   const displayName = user?.name || user?.full_name || user?.email?.split('@')[0] || 'JobShield Analyst';
-  const displayEmail = user?.email || 'Email unavailable';
-  const displayRole = user?.role || 'analyst';
-  const authMethod = user?.auth_provider === 'google' ? 'Google account' : 'Email account';
+  const displayEmail = user?.email || '';
+  const displayRole = user?.role || '';
+  const authMethod = user?.auth_provider === 'google' ? 'Google' : 'Email';
+  const accountId = user?.id !== undefined && user?.id !== null ? `#${user.id}` : '';
   const initials = displayName
     .split(/\s+/)
     .filter(Boolean)
@@ -113,9 +114,6 @@ export default function Sidebar({
           aria-label="Account profile"
           className="p-3 m-4 mb-2 rounded-xl bg-slate-900/60 border border-white/[0.06] backdrop-blur-md"
         >
-          <div className="text-[10px] font-mono uppercase tracking-wider font-bold text-slate-400 mb-2">
-            Signed-in Account
-          </div>
           <div className="flex items-center gap-2.5 min-w-0">
             {user?.avatar_url ? (
               <img
@@ -137,14 +135,17 @@ export default function Sidebar({
               <div className="text-xs text-white font-semibold truncate" title={displayName}>
                 {displayName}
               </div>
-              <div className="text-[11px] text-slate-400 truncate" title={displayEmail}>
-                {displayEmail}
-              </div>
+              {displayEmail && (
+                <div className="text-[11px] text-slate-400 truncate" title={displayEmail}>
+                  {displayEmail}
+                </div>
+              )}
             </div>
           </div>
           <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-mono">
             <span className="text-slate-500">{authMethod}</span>
             <span className="text-blue-300 uppercase">{displayRole}</span>
+            {accountId && <span className="text-slate-500">{accountId}</span>}
           </div>
           <button
             type="button"
