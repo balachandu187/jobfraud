@@ -83,6 +83,9 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class ProfileUpdateRequest(BaseModel):
+    full_name: str = Field(..., min_length=2, max_length=80)
+
 class GoogleAuthRequest(BaseModel):
     id_token: str = Field(..., min_length=1)
 
@@ -209,6 +212,38 @@ def google_authenticate(req: GoogleAuthRequest) -> Dict[str, Any]:
 def get_current_user_profile(user: Dict[str, Any] = Depends(require_auth)) -> Dict[str, Any]:
     """Validates session and returns current authenticated identity."""
     return {"authenticated": True, "user": user}
+
+@app.patch("/api/auth/profile")
+def update_current_user_profile(
+    req: ProfileUpdateRequest,
+    current_user: Dict[str, Any] = Depends(require_auth)
+) -> Dict[str, Any]:
+    """Updates the authenticated user's display name and refreshes their session token."""
+    full_name = req.full_name.strip()
+    if len(full_name) < 2:
+        raise HTTPException(status_code=422, detail="Display name must contain at least 2 characters.")
+
+    user_id = current_user.get("sub")
+    if not isinstance(user_id, int):
+        raise HTTPException(status_code=401, detail="Session does not contain a valid user ID.")
+
+    profile = db.update_user_full_name(user_id, full_name)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Account not found.")
+
+    token = create_auth_token(profile["id"], profile["email"], profile["role"], profile["full_name"])
+    return {
+        "success": True,
+        "token": token,
+        "user": {
+            "id": profile["id"],
+            "email": profile["email"],
+            "name": profile["full_name"],
+            "role": profile["role"],
+            "auth_provider": profile["auth_provider"],
+            "avatar_url": profile["avatar_url"]
+        }
+    }
 
 @app.get("/api/status")
 def get_system_status() -> Dict[str, Any]:

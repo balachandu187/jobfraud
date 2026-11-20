@@ -90,6 +90,22 @@ def test_database_crud(setup_system):
     deleted = db.delete_scan(scan_id)
     assert deleted is True
 
+def test_user_profile_name_update(tmp_path):
+    db = DatabaseManager(db_path=str(tmp_path / "profile.db"))
+    user_id = db.create_user(
+        email="profile@example.com",
+        password_hash="hash",
+        salt="salt",
+        full_name="Original Name"
+    )
+
+    assert user_id is not None
+    profile = db.update_user_full_name(user_id, "Updated Name")
+
+    assert profile is not None
+    assert profile["full_name"] == "Updated Name"
+    assert profile["email"] == "profile@example.com"
+
 def test_google_auth_rejects_unverified_profile_payload():
     with pytest.raises(ValidationError):
         GoogleAuthRequest(email="person@example.com", name="Not verified by Google")

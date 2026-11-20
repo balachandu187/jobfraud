@@ -138,6 +138,16 @@ export default function App({ googleClientId = '' }) {
     fetchAllData();
   };
 
+  const handleProfileUpdated = (profileData) => {
+    const nextSession = { token: profileData.token, user: profileData.user };
+    try {
+      localStorage.setItem('jobshield_session', JSON.stringify(nextSession));
+    } catch (error) {
+      console.warn('Unable to persist the updated profile session:', error);
+    }
+    setSession(nextSession);
+  };
+
   const handleSignOut = () => {
     try {
       localStorage.removeItem('jobshield_session');
@@ -240,7 +250,11 @@ export default function App({ googleClientId = '' }) {
           )}
 
           {activeTab === 'profile' && (
-            <ProfileDashboard user={session.user} />
+            <ProfileDashboard
+              user={session.user}
+              token={session.token}
+              onProfileUpdated={handleProfileUpdated}
+            />
           )}
         </div>
       </main>

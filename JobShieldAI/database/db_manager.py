@@ -135,6 +135,25 @@ class DatabaseManager:
             row = cursor.fetchone()
             return dict(row) if row else None
 
+    def update_user_full_name(self, user_id: int, full_name: str) -> Optional[Dict[str, Any]]:
+        """Updates a user's display name and returns the persisted public profile."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE users SET full_name = ? WHERE id = ?",
+                (full_name.strip(), user_id)
+            )
+            if cursor.rowcount == 0:
+                return None
+
+            cursor.execute("""
+                SELECT id, email, full_name, role, auth_provider, avatar_url
+                FROM users
+                WHERE id = ?
+            """, (user_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
     def save_scan(
         self,
         job_text: str,
