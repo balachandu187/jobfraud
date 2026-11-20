@@ -25,6 +25,7 @@ export default function Sidebar({
     { id: 'scanner', label: 'Job Scanner', icon: Radar, desc: 'Dual-Engine Detection', badge: 'Live' },
     { id: 'history', label: 'Scan Audit Logs', icon: History, desc: 'SQLite History' },
     { id: 'about', label: 'Pipeline Architecture', icon: Cpu, desc: 'TF-IDF & Heuristics' },
+    { id: 'profile', label: 'Profile Dashboard', icon: UserRound, desc: 'Account details' },
   ];
 
   const mlReady = systemStatus?.ml_ready ?? true;

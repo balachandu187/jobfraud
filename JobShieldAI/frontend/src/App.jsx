@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import ScannerWorkspace from './components/ScannerWorkspace';
 import ScanHistory from './components/ScanHistory';
 import Architecture from './components/Architecture';
+import ProfileDashboard from './components/ProfileDashboard';
 import LoginGate from './components/LoginGate';
 import { ShieldAlert, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -236,6 +237,10 @@ export default function App({ googleClientId = '' }) {
 
           {activeTab === 'about' && (
             <Architecture />
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileDashboard user={session.user} />
           )}
         </div>
       </main>
